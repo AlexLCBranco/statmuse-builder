@@ -38,7 +38,9 @@ test('builds a question from a picked player and chips, then saves it to Recent 
   await chip(page, 'Stat', 'Points').click()
   await chip(page, 'Quarter', 'Q4').click()
   await chip(page, 'Court', 'Away').click()
-  await page.getByRole('combobox', { name: 'Opponent' }).selectOption('Lakers')
+  // Type part of a team and press Enter: takes the best match.
+  await page.getByRole('combobox', { name: 'Opponent' }).fill('lak')
+  await page.getByRole('combobox', { name: 'Opponent' }).press('Enter')
   await chip(page, 'Result', 'Wins').click()
   await chip(page, 'Period', 'Last 5').click()
 
@@ -97,6 +99,48 @@ test('accepts a name that is not in the list, and Enter sends it', async ({ page
   await expect(recent(page).getByRole('link')).toHaveText(['Michael Jordan stats career'])
 })
 
+test('opponent box: a dropdown you can type into to narrow the teams', async ({ page }) => {
+  const box = page.getByRole('combobox', { name: 'Opponent' })
+  const list = page.getByRole('listbox', { name: 'Teams' })
+  const options = list.getByRole('option')
+
+  // Opening it lists every team, with "Any team" first.
+  await page.getByRole('button', { name: 'Show all teams' }).click()
+  await expect(options).toHaveCount(31)
+  await expect(options.first()).toHaveText('Any team')
+
+  // Typing narrows the list, by nickname or city.
+  await box.fill('la')
+  await expect(options).toHaveText(['Lakers', 'Trail Blazers', 'Clippers'])
+  await box.fill('utah')
+  await expect(options).toHaveText(['Jazz'])
+  await options.first().click()
+  await expect(box).toHaveValue('Jazz')
+  await expect(question(page)).toHaveText('LeBron James stats vs Jazz last 10 games')
+
+  // The first arrow opens the full list on the current team; the next moves.
+  await box.press('ArrowDown')
+  await expect(list.getByRole('option', { name: 'Jazz' })).toHaveAttribute('aria-selected', 'true')
+  await box.press('ArrowDown')
+  await box.press('Enter')
+  await expect(box).toHaveValue('Kings')
+
+  // A half-typed or unknown name is dropped on leaving the box.
+  await box.fill('zzz')
+  await expect(list.getByText('No team matches')).toBeVisible()
+  await box.blur()
+  await expect(box).toHaveValue('Kings')
+
+  // An exact name typed in counts; an empty box means any team.
+  await box.fill('heat')
+  await box.blur()
+  await expect(box).toHaveValue('Heat')
+  await box.fill('')
+  await box.blur()
+  await expect(box).toHaveValue('')
+  await expect(question(page)).toHaveText('LeBron James stats last 10 games')
+})
+
 test('copy link puts the exact URL on the clipboard', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.getByRole('button', { name: 'Copy link' }).click()
@@ -107,7 +151,8 @@ test('copy link puts the exact URL on the clipboard', async ({ page, context }) 
 test('fits a 375px phone screen without sideways scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.getByRole('combobox', { name: 'Player' }).fill('Shai Gilgeous-Alexander')
-  await page.getByRole('combobox', { name: 'Opponent' }).selectOption('Trail Blazers')
+  await page.getByRole('combobox', { name: 'Opponent' }).click()
+  await page.getByRole('listbox', { name: 'Teams' }).getByRole('option', { name: 'Trail Blazers' }).click()
   await chip(page, 'Quarter', '2nd half').click()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)

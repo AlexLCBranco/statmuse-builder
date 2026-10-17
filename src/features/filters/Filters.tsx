@@ -5,12 +5,12 @@ import {
   QUARTER_OPTIONS,
   RESULT_OPTIONS,
   STAT_OPTIONS,
-  TEAMS,
 } from '../../domain/options'
 import { parseLastN, type QueryState } from '../../domain/query'
 import { ChipGroup } from './ChipGroup'
 import styles from './Filters.module.css'
 import { PlayerCombobox } from './PlayerCombobox'
+import { TeamCombobox } from './TeamCombobox'
 
 interface Props {
   query: QueryState
@@ -38,21 +38,7 @@ export function Filters({ query, onChange, onSubmit }: Props) {
         <label className={styles.rowLabel} htmlFor="opponent">
           Opponent
         </label>
-        <div>
-          <select
-            id="opponent"
-            className={styles.field}
-            value={query.opponent}
-            onChange={(event) => onChange({ opponent: event.target.value })}
-          >
-            <option value="">Any team</option>
-            {TEAMS.map((team) => (
-              <option key={team} value={team}>
-                vs {team}
-              </option>
-            ))}
-          </select>
-        </div>
+        <TeamCombobox id="opponent" value={query.opponent} onChange={(opponent) => onChange({ opponent })} />
       </div>
 
       <div className={styles.row}>
