@@ -1,7 +1,7 @@
 {
   "name": "statmuse-builder",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "e2e:prod": "cross-env BASE_URL=https://statmuse-builder.vercel.app playwright test",
+    "sync:players": "node scripts/sync-players.mjs",
     "check": "npm run lint && npm run typecheck && npm run test && npm run e2e"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
 
-import { PLAYERS } from '../../domain/data/players-2023-24'
+import { PLAYERS, PLAYERS_SEASON } from '../../domain/data/players'
 import { findPlayers, highlightRange } from '../../domain/playerSearch'
 import styles from './Filters.module.css'
 
@@ -103,7 +103,7 @@ export function PlayerCombobox({ id, value, onChange, onSubmit }: Props) {
           ))}
       </ul>
       </div>
-      <div className={styles.hint}>Suggestions cover the 2023‑24 roster list; any name you type still works.</div>
+      <div className={styles.hint}>Suggestions cover the {PLAYERS_SEASON} rosters; any name you type still works.</div>
     </div>
   )
 }

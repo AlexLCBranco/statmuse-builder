@@ -129,3 +129,9 @@ test.describe('theme', () => {
     expect(await background(page)).toBe(LIGHT_BG)
   })
 })
+
+test('suggests 2026-27 rookies from the synced roster list', async ({ page }) => {
+  await expect(page.getByText('Suggestions cover the 2026-27 rosters')).toBeVisible()
+  await page.getByRole('combobox', { name: 'Player' }).fill('cooper fl')
+  await expect(page.getByRole('listbox', { name: 'Players' }).getByRole('option')).toHaveText(['Cooper Flagg'])
+})

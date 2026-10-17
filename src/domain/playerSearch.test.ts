@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { PLAYERS } from './data/players-2023-24'
+import { PLAYERS, PLAYERS_SEASON } from './data/players'
 import { findPlayers, highlightRange, matchRank, normalizeName } from './playerSearch'
 
 describe('normalizeName', () => {
@@ -23,6 +23,19 @@ describe('matchRank', () => {
 
 describe('findPlayers', () => {
   const list = ['Jaylen Brown', 'Bruce Brown', 'Brandon Ingram', 'Mikal Bridges', 'Dillon Brooks']
+  // Fixed names, so these tests don't break when the synced roster changes.
+  const names = [
+    "De'Aaron Fox",
+    'P.J. Tucker',
+    'Luka Doncic',
+    'Nickeil Alexander-Walker',
+    'Shai Gilgeous-Alexander',
+    'LeBron James',
+    'Stephen Curry',
+    'Anthony Davis',
+    'Jamal Murray',
+    'Paolo Banchero',
+  ]
 
   it('returns nothing for an empty or blank search', () => {
     expect(findPlayers(list, '')).toEqual([])
@@ -49,30 +62,30 @@ describe('findPlayers', () => {
   })
 
   it('limits the number of suggestions', () => {
-    expect(findPlayers(PLAYERS, 'a')).toHaveLength(8)
-    expect(findPlayers(PLAYERS, 'a', 3)).toHaveLength(3)
+    expect(findPlayers(names, 'a')).toHaveLength(8)
+    expect(findPlayers(names, 'a', 3)).toHaveLength(3)
   })
 
   it('ignores case, accents, apostrophes and periods in what was typed', () => {
-    expect(findPlayers(PLAYERS, 'DEAARON')).toEqual(["De'Aaron Fox"])
-    expect(findPlayers(PLAYERS, "de'aa")).toEqual(["De'Aaron Fox"])
-    expect(findPlayers(PLAYERS, 'pj tuc')).toEqual(['P.J. Tucker'])
-    expect(findPlayers(PLAYERS, 'P.J. Tu')).toEqual(['P.J. Tucker'])
-    expect(findPlayers(PLAYERS, 'dončić')).toEqual(['Luka Doncic'])
+    expect(findPlayers(names, 'DEAARON')).toEqual(["De'Aaron Fox"])
+    expect(findPlayers(names, "de'aa")).toEqual(["De'Aaron Fox"])
+    expect(findPlayers(names, 'pj tuc')).toEqual(['P.J. Tucker'])
+    expect(findPlayers(names, 'P.J. Tu')).toEqual(['P.J. Tucker'])
+    expect(findPlayers(names, 'dončić')).toEqual(['Luka Doncic'])
   })
 
   it('finds the second half of hyphenated names as a word', () => {
-    expect(findPlayers(PLAYERS, 'alexander')).toEqual(['Nickeil Alexander-Walker', 'Shai Gilgeous-Alexander'])
+    expect(findPlayers(names, 'alexander')).toEqual(['Nickeil Alexander-Walker', 'Shai Gilgeous-Alexander'])
     expect(matchRank('Shai Gilgeous-Alexander', 'alexander')).toBe(1)
   })
 
   it('treats repeated spaces as one', () => {
-    expect(findPlayers(PLAYERS, 'lebron   james')).toEqual(['LeBron James'])
+    expect(findPlayers(names, 'lebron   james')).toEqual(['LeBron James'])
   })
 
-  it('finds well-known players from the full list by first name', () => {
-    expect(findPlayers(PLAYERS, 'lebr')).toEqual(['LeBron James'])
-    expect(findPlayers(PLAYERS, 'steph')[0]).toBe('Stephen Curry')
+  it('finds well-known players by first name', () => {
+    expect(findPlayers(names, 'lebr')).toEqual(['LeBron James'])
+    expect(findPlayers(names, 'steph')[0]).toBe('Stephen Curry')
   })
 })
 
@@ -93,8 +106,16 @@ describe('highlightRange', () => {
 })
 
 describe('player data', () => {
-  it('has the 536 unique 2023-24 names', () => {
-    expect(PLAYERS).toHaveLength(536)
-    expect(new Set(PLAYERS).size).toBe(536)
+  it('is a current, deduplicated roster list', () => {
+    expect(PLAYERS_SEASON).toBe('2026-27')
+    expect(PLAYERS.length).toBeGreaterThan(400)
+    expect(new Set(PLAYERS).size).toBe(PLAYERS.length)
+  })
+
+  it('has well-known current players, with accents stripped', () => {
+    for (const name of ['LeBron James', 'Victor Wembanyama', 'Cooper Flagg', 'Nikola Jokic']) {
+      expect(PLAYERS).toContain(name)
+    }
+    expect(PLAYERS.every((n) => /^[ -~]+$/.test(n))).toBe(true)
   })
 })
