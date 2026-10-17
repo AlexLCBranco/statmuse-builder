@@ -4,6 +4,8 @@ import { MAX_LAST_N } from './options'
  * Everything the user has chosen. Each filter holds the exact question words
  * from `options.ts` ('' = no filter). `lastN` is the custom "last N games"
  * box, kept as a string because it mirrors a text input ('' = empty).
+ * `vsPlayer` is a typed player matchup ("vs Kon Knueppel"), free text like
+ * `player`.
  */
 export interface QueryState {
   player: string
@@ -11,6 +13,7 @@ export interface QueryState {
   quarter: string
   court: string
   opponent: string
+  vsPlayer: string
   period: string
   lastN: string
   result: string
@@ -23,6 +26,7 @@ export const DEFAULT_QUERY: QueryState = {
   quarter: '',
   court: '',
   opponent: '',
+  vsPlayer: '',
   period: 'last 10 games',
   lastN: '',
   result: '',
@@ -43,8 +47,9 @@ export function effectivePeriod(query: QueryState): string {
 }
 
 /**
- * The question in order: player, stat, quarter, court, opponent, result,
- * period. Empty filters are left out; the player part is always first, even
+ * The question in order: player, stat, quarter, court, opponent team,
+ * opponent player, result, period. StatMuse reads both "vs" parts together
+ * ("vs Warriors vs Stephen Curry"). Empty filters are left out; the player part is always first, even
  * when empty, so the UI can show a placeholder in its place.
  */
 export function questionParts(query: QueryState): QuestionPart[] {
@@ -54,6 +59,7 @@ export function questionParts(query: QueryState): QuestionPart[] {
     query.quarter,
     query.court,
     query.opponent && `vs ${query.opponent}`,
+    query.vsPlayer.trim() && `vs ${query.vsPlayer.trim()}`,
     query.result,
     effectivePeriod(query),
   ]

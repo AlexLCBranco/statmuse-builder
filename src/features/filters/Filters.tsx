@@ -6,6 +6,7 @@ import {
   RESULT_OPTIONS,
   STAT_OPTIONS,
 } from '../../domain/options'
+import { PLAYERS_SEASON } from '../../domain/data/players'
 import { parseLastN, type QueryState } from '../../domain/query'
 import { ChipGroup } from './ChipGroup'
 import styles from './Filters.module.css'
@@ -27,7 +28,13 @@ export function Filters({ query, onChange, onSubmit }: Props) {
         <label className={styles.rowLabel} htmlFor="player">
           Player
         </label>
-        <PlayerCombobox id="player" value={query.player} onChange={(player) => onChange({ player })} onSubmit={onSubmit} />
+        <PlayerCombobox
+          id="player"
+          value={query.player}
+          onChange={(player) => onChange({ player })}
+          onSubmit={onSubmit}
+          hint={`Suggestions cover the ${PLAYERS_SEASON} rosters; any name you type still works.`}
+        />
       </div>
 
       <ChipRow label="Stat" options={STAT_OPTIONS} value={query.stat} onChange={(stat) => onChange({ stat })} />
@@ -39,6 +46,20 @@ export function Filters({ query, onChange, onSubmit }: Props) {
           Opponent
         </label>
         <TeamCombobox id="opponent" value={query.opponent} onChange={(opponent) => onChange({ opponent })} />
+      </div>
+
+      <div className={styles.row}>
+        <label className={styles.rowLabel} htmlFor="vs-player">
+          Vs player
+        </label>
+        <PlayerCombobox
+          id="vs-player"
+          value={query.vsPlayer}
+          onChange={(vsPlayer) => onChange({ vsPlayer })}
+          onSubmit={onSubmit}
+          placeholder="Any player (e.g. a matchup)"
+          listLabel="Opponent players"
+        />
       </div>
 
       <div className={styles.row}>

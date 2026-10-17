@@ -26,14 +26,14 @@ test('builds a question from a picked player and chips, then saves it to Recent 
   await expect(askLink(page)).toHaveAttribute('aria-disabled', 'true')
 
   // Autocomplete: type part of the name, arrow down, Enter.
-  const player = page.getByRole('combobox', { name: 'Player' })
+  const player = page.getByRole('combobox', { name: 'Player', exact: true })
   await player.fill('deaa')
-  await expect(page.getByRole('listbox', { name: 'Players' }).getByRole('option')).toHaveText(["De'Aaron Fox"])
+  await expect(page.getByRole('listbox', { name: 'Players', exact: true }).getByRole('option')).toHaveText(["De'Aaron Fox"])
   await player.press('ArrowDown')
-  await expect(page.getByRole('listbox', { name: 'Players' }).getByRole('option', { name: "De'Aaron Fox" })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('listbox', { name: 'Players', exact: true }).getByRole('option', { name: "De'Aaron Fox" })).toHaveAttribute('aria-selected', 'true')
   await player.press('Enter')
   await expect(player).toHaveValue("De'Aaron Fox")
-  await expect(page.getByRole('listbox', { name: 'Players', includeHidden: true })).toBeHidden()
+  await expect(page.getByRole('listbox', { name: 'Players', exact: true, includeHidden: true })).toBeHidden()
 
   await chip(page, 'Stat', 'Points').click()
   await chip(page, 'Quarter', 'Q4').click()
@@ -85,9 +85,9 @@ test('builds a question from a picked player and chips, then saves it to Recent 
 })
 
 test('accepts a name that is not in the list, and Enter sends it', async ({ page }) => {
-  const player = page.getByRole('combobox', { name: 'Player' })
+  const player = page.getByRole('combobox', { name: 'Player', exact: true })
   await player.fill('Michael Jordan')
-  await expect(page.getByRole('listbox', { name: 'Players', includeHidden: true })).toBeHidden()
+  await expect(page.getByRole('listbox', { name: 'Players', exact: true, includeHidden: true })).toBeHidden()
   await chip(page, 'Period', 'Career').click()
   await expect(question(page)).toHaveText('Michael Jordan stats career')
 
@@ -141,6 +141,34 @@ test('opponent box: a dropdown you can type into to narrow the teams', async ({ 
   await expect(question(page)).toHaveText('LeBron James stats last 10 games')
 })
 
+test('vs player box: picks an opponent player for a matchup question', async ({ page }) => {
+  await page.getByRole('combobox', { name: 'Player', exact: true }).fill('Cooper Flagg')
+  await chip(page, 'Stat', 'Points').click()
+  await chip(page, 'Period', 'Career').click()
+
+  const vs = page.getByRole('combobox', { name: 'Vs player' })
+  await vs.fill('knue')
+  await expect(page.getByRole('listbox', { name: 'Opponent players' }).getByRole('option')).toHaveText(['Kon Knueppel'])
+  await vs.press('Enter')
+  await expect(vs).toHaveValue('Kon Knueppel')
+  await expect(question(page)).toHaveText('Cooper Flagg points vs Kon Knueppel career')
+  await expect(askLink(page)).toHaveAttribute('href', `${ASK}cooper-flagg-points-vs-kon-knueppel-career`)
+
+  // With a team too, both "vs" parts are kept, team first.
+  await page.getByRole('combobox', { name: 'Opponent' }).fill('hornets')
+  await page.getByRole('combobox', { name: 'Opponent' }).press('Enter')
+  await expect(question(page)).toHaveText('Cooper Flagg points vs Hornets vs Kon Knueppel career')
+
+  // Saved and restored through Recent like every other filter.
+  const popupPromise = page.waitForEvent('popup')
+  await askLink(page).click()
+  await (await popupPromise).close()
+  await page.getByRole('button', { name: 'Clear' }).click()
+  await expect(vs).toHaveValue('')
+  await recent(page).getByRole('button', { name: 'Edit' }).click()
+  await expect(vs).toHaveValue('Kon Knueppel')
+})
+
 test('copy link puts the exact URL on the clipboard', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.getByRole('button', { name: 'Copy link' }).click()
@@ -150,7 +178,7 @@ test('copy link puts the exact URL on the clipboard', async ({ page, context }) 
 
 test('fits a 375px phone screen without sideways scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
-  await page.getByRole('combobox', { name: 'Player' }).fill('Shai Gilgeous-Alexander')
+  await page.getByRole('combobox', { name: 'Player', exact: true }).fill('Shai Gilgeous-Alexander')
   await page.getByRole('combobox', { name: 'Opponent' }).click()
   await page.getByRole('listbox', { name: 'Teams' }).getByRole('option', { name: 'Trail Blazers' }).click()
   await chip(page, 'Quarter', '2nd half').click()
@@ -177,6 +205,6 @@ test.describe('theme', () => {
 
 test('suggests 2026-27 rookies from the synced roster list', async ({ page }) => {
   await expect(page.getByText('Suggestions cover the 2026-27 rosters')).toBeVisible()
-  await page.getByRole('combobox', { name: 'Player' }).fill('cooper fl')
-  await expect(page.getByRole('listbox', { name: 'Players' }).getByRole('option')).toHaveText(['Cooper Flagg'])
+  await page.getByRole('combobox', { name: 'Player', exact: true }).fill('cooper fl')
+  await expect(page.getByRole('listbox', { name: 'Players', exact: true }).getByRole('option')).toHaveText(['Cooper Flagg'])
 })

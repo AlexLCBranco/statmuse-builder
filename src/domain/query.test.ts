@@ -31,6 +31,7 @@ describe('buildQuestion', () => {
     [{ court: 'on the road' }, 'Jayson Tatum stats on the road'],
     [{ opponent: 'Lakers' }, 'Jayson Tatum stats vs Lakers'],
     [{ opponent: 'Trail Blazers' }, 'Jayson Tatum stats vs Trail Blazers'],
+    [{ vsPlayer: 'Kon Knueppel' }, 'Jayson Tatum stats vs Kon Knueppel'],
     [{ result: 'in wins' }, 'Jayson Tatum stats in wins'],
     [{ result: 'in losses' }, 'Jayson Tatum stats in losses'],
     [{ period: 'career' }, 'Jayson Tatum stats career'],
@@ -51,6 +52,17 @@ describe('buildQuestion', () => {
     expect(buildQuestion(all)).toBe(
       'Jayson Tatum assists in the 4th quarter on the road vs Lakers in wins this season',
     )
+  })
+
+  it('puts the opponent player right after the opponent team', () => {
+    expect(buildQuestion(q({ stat: 'points', opponent: 'Hornets', vsPlayer: 'Kon Knueppel', result: 'in wins' }))).toBe(
+      'Jayson Tatum points vs Hornets vs Kon Knueppel in wins',
+    )
+  })
+
+  it('trims spaces around a typed opponent player', () => {
+    expect(buildQuestion(q({ vsPlayer: '  Kon Knueppel ' }))).toBe('Jayson Tatum stats vs Kon Knueppel')
+    expect(buildQuestion(q({ vsPlayer: '   ' }))).toBe('Jayson Tatum stats')
   })
 
   it('combines some filters and skips the empty ones', () => {

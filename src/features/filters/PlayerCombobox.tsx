@@ -1,6 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
 
-import { PLAYERS, PLAYERS_SEASON } from '../../domain/data/players'
+import { PLAYERS } from '../../domain/data/players'
 import { findPlayers, highlightRange } from '../../domain/playerSearch'
 import styles from './Filters.module.css'
 
@@ -8,20 +8,25 @@ interface Props {
   id: string
   value: string
   onChange: (player: string) => void
+  placeholder?: string
+  /** Accessible name of the suggestion list. */
+  listLabel?: string
+  /** Small print under the box; omitted when not given. */
+  hint?: string
   /** Enter with a player already chosen: send the question. */
   onSubmit: () => void
 }
-
-const LIST_ID = 'player-suggestions'
-const optionId = (i: number) => `player-option-${i}`
 
 /**
  * A text box with suggestions (the ARIA "combobox" pattern): focus stays in
  * the input while arrow keys move a highlight through the list, and
  * aria-activedescendant tells screen readers which option is highlighted.
- * Any typed name is accepted; the list only helps.
+ * Any typed name is accepted; the list only helps. Used for both the player
+ * and the opponent player, so ids are derived from `id` to stay unique.
  */
-export function PlayerCombobox({ id, value, onChange, onSubmit }: Props) {
+export function PlayerCombobox({ id, value, onChange, onSubmit, placeholder = 'Type any player…', listLabel = 'Players', hint }: Props) {
+  const listId = `${id}-suggestions`
+  const optionId = (i: number) => `${id}-option-${i}`
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
   const hits = useMemo(() => findPlayers(PLAYERS, value), [value])
@@ -67,10 +72,10 @@ export function PlayerCombobox({ id, value, onChange, onSubmit }: Props) {
           id={id}
           type="text"
           className={styles.playerInput}
-          placeholder="Type any player…"
+          placeholder={placeholder}
           role="combobox"
           aria-expanded={showList}
-          aria-controls={LIST_ID}
+          aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={showList && active >= 0 ? optionId(active) : undefined}
           autoComplete="off"
@@ -84,7 +89,7 @@ export function PlayerCombobox({ id, value, onChange, onSubmit }: Props) {
           onBlur={() => setOpen(false)}
           onKeyDown={handleKeyDown}
         />
-        <ul id={LIST_ID} className={styles.suggestions} role="listbox" aria-label="Players" hidden={!showList}>
+        <ul id={listId} className={styles.suggestions} role="listbox" aria-label={listLabel} hidden={!showList}>
           {hits.map((name, i) => (
             <li
               key={name}
@@ -101,9 +106,9 @@ export function PlayerCombobox({ id, value, onChange, onSubmit }: Props) {
               <Highlighted name={name} typed={value} />
             </li>
           ))}
-      </ul>
+        </ul>
       </div>
-      <div className={styles.hint}>Suggestions cover the {PLAYERS_SEASON} rosters; any name you type still works.</div>
+      {hint && <div className={styles.hint}>{hint}</div>}
     </div>
   )
 }
