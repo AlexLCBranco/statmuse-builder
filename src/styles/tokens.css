@@ -1,0 +1,96 @@
+/**
+ * Design tokens: every colour, font, size and radius the app uses.
+ * Components read these through var(--name) and never hardcode values, so a
+ * theme is just a different set of values for the same names.
+ *
+ * Theme: light by default, dark when the system prefers it. A
+ * data-theme="light" / "dark" attribute on <html> forces one (not wired to a
+ * toggle yet).
+ */
+:root {
+  /* ---- Colours (light) ---- */
+  --color-bg: #f3f1ec;
+  --color-surface: #fbfaf7;
+  --color-ink: #1b1d24;
+  --color-muted: #6a6862;
+  --color-line: #dcd8cf;
+  --color-accent: #d4561c;
+  --color-accent-ink: #ffffff;
+  --color-chip: #ebe7de;
+  --color-focus: #1f5fd1;
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.12);
+  color-scheme: light;
+
+  /* ---- Fonts ---- */
+  --font-display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-brand: 22px;
+  --text-heading: 18px;
+  --text-hero: clamp(28px, 6vw, 44px);
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-heavy: 800;
+  --line-tight: 1.05;
+  --line-normal: 1.5;
+  --tracking-label: 0.08em;
+  --tracking-brand: 0.04em;
+
+  /* ---- Spacing (4px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 56px;
+
+  /* ---- Shape & layout ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-full: 999px;
+  --page-max: 760px;
+  --label-col: 110px;
+  --gutter: 16px;
+  --duration-fast: 0.2s;
+}
+
+/* Same dark values twice: once for "system prefers dark" (unless forced
+   light), once for "forced dark". */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #12141a;
+    --color-surface: #1a1d25;
+    --color-ink: #eceae4;
+    --color-muted: #9b9a94;
+    --color-line: #2d313b;
+    --color-accent: #f07a3e;
+    --color-accent-ink: #14100c;
+    --color-chip: #242833;
+    --color-focus: #7aa7ff;
+    --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #12141a;
+  --color-surface: #1a1d25;
+  --color-ink: #eceae4;
+  --color-muted: #9b9a94;
+  --color-line: #2d313b;
+  --color-accent: #f07a3e;
+  --color-accent-ink: #14100c;
+  --color-chip: #242833;
+  --color-focus: #7aa7ff;
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}

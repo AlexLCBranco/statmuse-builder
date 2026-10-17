@@ -1,0 +1,255 @@
+<title>StatMuse Query Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column; the live question is the hero, the controls are rows of chips under it, recents at the bottom */
+:root{
+  --bg:#f3f1ec; --surface:#fbfaf7; --ink:#1b1d24; --muted:#6a6862; --line:#dcd8cf;
+  --accent:#d4561c; --accent-ink:#ffffff; --chip:#ebe7de; --focus:#1f5fd1;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12141a; --surface:#1a1d25; --ink:#eceae4; --muted:#9b9a94; --line:#2d313b;
+  --accent:#f07a3e; --accent-ink:#14100c; --chip:#242833; --focus:#7aa7ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12141a; --surface:#1a1d25; --ink:#eceae4; --muted:#9b9a94; --line:#2d313b;
+  --accent:#f07a3e; --accent-ink:#14100c; --chip:#242833; --focus:#7aa7ff; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-block:32px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:28px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+.brand span{color:var(--accent)}
+.tag{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* hero: the question */
+.q{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:16px}
+.q-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.q-text{font-family:var(--display);font-weight:600;font-size:clamp(28px,6vw,44px);line-height:1.05;text-wrap:balance;min-height:1.05em}
+.q-text b{font-weight:800;color:var(--accent)}
+.q-text .ph{color:var(--muted);font-weight:600}
+.url{font-family:var(--mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 14px var(--body);border-radius:4px;padding:10px 16px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.toast{font-size:13px;color:var(--muted);align-self:center}
+
+/* controls */
+.controls{display:flex;flex-direction:column;gap:20px}
+.row{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start}
+.row > label,.row > .rl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:9px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{font:500 14px var(--body);background:var(--chip);color:var(--ink);border:1px solid transparent;border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip:hover{border-color:var(--line)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.chip.any[aria-pressed="true"]{background:transparent;border-color:var(--ink);color:var(--ink)}
+input[type=text],input[type=number],select{font:500 15px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.player{position:relative;min-width:0}
+.player input{width:100%;box-sizing:border-box;font-size:17px;padding:10px 12px}
+.sugg{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:4px;max-height:260px;overflow:auto;margin:0;padding:4px 0;list-style:none;box-shadow:0 8px 24px rgb(0 0 0 / .12)}
+.sugg li{padding:7px 12px;cursor:pointer}
+.sugg li[aria-selected="true"],.sugg li:hover{background:var(--chip)}
+.sugg li mark{background:none;color:var(--accent);font-weight:600}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.inline input[type=number]{width:72px}
+select{max-width:100%}
+
+/* recents */
+.recent h2{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 8px}
+.recent ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.recent li{border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 0}
+.recent a{color:var(--ink);text-decoration:none;min-width:0;overflow-wrap:anywhere}
+.recent a:hover{color:var(--accent)}
+.recent button{background:none;border:0;color:var(--muted);cursor:pointer;font:500 13px var(--body);padding:4px 6px}
+.recent .empty{color:var(--muted);font-size:14px;padding:10px 0}
+@media (max-width:520px){.row{grid-template-columns:1fr;gap:6px}.row > label,.row > .rl{padding-top:0}}
+@media (prefers-reduced-motion:no-preference){.q-text{transition:color .2s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">Stat<span>/</span>Muse Builder</div>
+    <div class="tag">NBA · builds the question, StatMuse answers it</div>
+  </header>
+
+  <section class="q" aria-live="polite">
+    <div class="q-label">Your question</div>
+    <div class="q-text" id="qtext"></div>
+    <div class="url" id="qurl"></div>
+    <div class="actions">
+      <a class="btn primary" id="go" href="#" target="_blank" rel="noopener">Ask StatMuse ↗</a>
+      <button class="btn" id="copyQ" type="button">Copy question</button>
+      <button class="btn" id="copyL" type="button">Copy link</button>
+      <button class="btn" id="reset" type="button">Clear</button>
+      <span class="toast" id="toast"></span>
+    </div>
+  </section>
+
+  <form class="controls" id="form" autocomplete="off">
+    <div class="row">
+      <label for="player">Player</label>
+      <div class="player">
+        <input type="text" id="player" placeholder="Type any player…" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list">
+        <ul class="sugg" id="sugg" role="listbox" hidden></ul>
+        <div class="hint">Suggestions cover the 2023‑24 roster list; any name you type still works.</div>
+      </div>
+    </div>
+    <div class="row"><div class="rl">Stat</div><div class="chips" data-key="stat"></div></div>
+    <div class="row"><div class="rl">Quarter</div><div class="chips" data-key="quarter"></div></div>
+    <div class="row"><div class="rl">Court</div><div class="chips" data-key="court"></div></div>
+    <div class="row">
+      <label for="opp">Opponent</label>
+      <div><select id="opp"><option value="">Any team</option></select></div>
+    </div>
+    <div class="row">
+      <div class="rl">Period</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <div class="chips" data-key="period"></div>
+        <div class="inline"><span class="hint" style="margin:0">or last</span><input type="number" id="lastN" min="1" max="82" placeholder="N" aria-label="Last N games"><span class="hint" style="margin:0">games</span></div>
+      </div>
+    </div>
+    <div class="row"><div class="rl">Result</div><div class="chips" data-key="result"></div></div>
+  </form>
+
+  <section class="recent">
+    <h2>Recent</h2>
+    <ul id="recent"></ul>
+  </section>
+</div>
+
+<script>
+const PLAYERS="Precious Achiuwa|Steven Adams|Bam Adebayo|Ochai Agbaji|Santi Aldama|Nickeil Alexander-Walker|Grayson Allen|Jarrett Allen|Jose Alvarado|Kyle Anderson|Giannis Antetokounmpo|Thanasis Antetokounmpo|Cole Anthony|OG Anunoby|Ryan Arcidiacono|Deni Avdija|Deandre Ayton|Udoka Azubuike|Ibou Badji|Marvin Bagley III|Amari Bailey|Patrick Baldwin Jr.|LaMelo Ball|Lonzo Ball|Mo Bamba|Paolo Banchero|Desmond Bane|Dalano Banton|Dominick Barlow|Harrison Barnes|Scottie Barnes|RJ Barrett|Charles Bassey|Emoni Bates|Keita Bates-Diop|Nicolas Batum|Bradley Beal|Malik Beasley|MarJon Beauchamp|Charles Bediako|Davis Bertans|Patrick Beverley|Saddiq Bey|Goga Bitadze|Onuralp Bitim|Bismack Biyombo|Anthony Black|Leaky Black|Bogdan Bogdanovic|Bojan Bogdanovic|Bol Bol|Marques Bolden|Devin Booker|Brandon Boston Jr.|Chris Boucher|James Bouknight|Jamaree Bouyea|Malaki Branham|Christian Braun|Mikal Bridges|Miles Bridges|Oshae Brissett|Malcolm Brogdon|Armoni Brooks|Dillon Brooks|Bruce Brown|Jaylen Brown|Kendall Brown|Kobe Brown|Moses Brown|Greg Brown III|Charlie Brown Jr.|Troy Brown Jr.|Jalen Brunson|Thomas Bryant|Kobe Bufkin|Reggie Bullock Jr.|Alec Burks|Jared Butler|Jimmy Butler|John Butler Jr.|Jamal Cain|Kentavious Caldwell-Pope|Toumani Camara|Vlatko Cancar|Clint Capela|Jevon Carter|Wendell Carter Jr.|Alex Caruso|Colin Castleton|Malcolm Cazalon|Julian Champagnie|Max Christie|Josh Christopher|Sidy Cissoko|Jaylen Clark|Brandon Clarke|Jordan Clarkson|Nic Claxton|Noah Clowney|Amir Coffey|John Collins|Zach Collins|Mike Conley|Pat Connaughton|Bilal Coulibaly|Ricky Council IV|Robert Covington|Torrey Craig|Jae Crowder|Cade Cunningham|Seth Curry|Stephen Curry|Dyson Daniels|Anthony Davis|Johnny Davis|JD Davison|DeMar DeRozan|Dexter Dennis|Donte DiVincenzo|Moussa Diabate|Gradey Dick|Ousmane Dieng|Spencer Dinwiddie|Luka Doncic|Luguentz Dort|Ayo Dosunmu|Andre Drummond|Chris Duarte|Kris Dunn|Kevin Durant|Jalen Duren|Tari Eason|Anthony Edwards|Kessler Edwards|Keon Ellis|Joel Embiid|Drew Eubanks|Dante Exum|Bruno Fernando|Dorian Finney-Smith|Malachi Flynn|Simone Fontecchio|Jordan Ford|Trent Forrest|Evan Fournier|De'Aaron Fox|Javon Freeman-Liberty|Alex Fudge|Markelle Fultz|Daniel Gafford|Danilo Gallinari|Darius Garland|Usman Garuba|Luka Garza|Kaiser Gates|Keyonte George|Paul George|Josh Giddey|Harry Giles III|Shai Gilgeous-Alexander|Anthony Gill|Collin Gillespie|Jacob Gilyard|Rudy Gobert|Jordan Goodwin|Aaron Gordon|Eric Gordon|Devonte' Graham|Jerami Grant|AJ Green|Danny Green|Draymond Green|Jalen Green|Jeff Green|Josh Green|AJ Griffin|Quentin Grimes|Mouhamed Gueye|Rui Hachimura|Tyrese Haliburton|R.J. Hampton|Tim Hardaway Jr.|James Harden|Jaden Hardy|Ron Harper Jr.|Gary Harris|Joe Harris|Kevon Harris|Tobias Harris|Shaquille Harrison|Josh Hart|Isaiah Hartenstein|Sam Hauser|Jordan Hawkins|Jaxson Hayes|Killian Hayes|Gordon Hayward|Scoot Henderson|Taylor Hendricks|Tyler Herro|Buddy Hield|Haywood Highsmith|Nate Hinton|D'Moi Hodge|Aaron Holiday|Jrue Holiday|Justin Holiday|Richaun Holmes|Chet Holmgren|Jalen Hood-Schifino|Al Horford|Talen Horton-Tucker|Danuel House Jr.|Caleb Houstan|Jett Howard|Kevin Huerter|Jay Huff|De'Andre Hunter|Bones Hyland|Joe Ingles|Brandon Ingram|Kyrie Irving|Jonathan Isaac|Jaden Ivey|GG Jackson|Isaiah Jackson|Reggie Jackson|Andre Jackson Jr.|Jaren Jackson Jr.|Trayce Jackson-Davis|LeBron James|Jaime Jaquez Jr.|DaQuan Jeffries|Ty Jerome|Isaiah Joe|Cameron Johnson|Jalen Johnson|Keldon Johnson|Keon Johnson|Keyontae Johnson|Nikola Jokic|Colby Jones|Damian Jones|Herbert Jones|Tre Jones|Tyus Jones|Derrick Jones Jr.|DeAndre Jordan|Cory Joseph|Nikola Jovic|Johnny Juzang|Luke Kennard|Walker Kessler|Braxton Key|Corey Kispert|Maxi Kleber|Nathan Knight|Kevin Knox II|Christian Koloko|John Konchar|Furkan Korkmaz|Luke Kornet|Jonathan Kuminga|Kyle Kuzma|Jake LaRavia|Zach LaVine|Jock Landale|A.J. Lawson|Caris LeVert|Damion Lee|Saben Lee|Alex Len|Kawhi Leonard|Justin Lewis|Maxwell Lewis|Kira Lewis Jr.|E.J. Liddell|Damian Lillard|Nassir Little|Dereck Lively II|Isaiah Livers|Chris Livingston|Kenneth Lofton Jr.|Kevon Looney|Brook Lopez|Robin Lopez|Kevin Love|Kyle Lowry|Seth Lundy|Trey Lyles|Theo Maledon|Sandro Mamukelashvili|Terance Mann|Tre Mann|Boban Marjanovic|Lauri Markkanen|Naji Marshall|Caleb Martin|Cody Martin|Jaylen Martin|KJ Martin|Garrison Mathews|Bennedict Mathurin|Wesley Matthews|Tyrese Maxey|Skylar Mays|Miles McBride|CJ McCollum|T.J. McConnell|Jaden McDaniels|Jalen McDaniels|Doug McDermott|JaVale McGee|Bryce McGowens|Jordan McLaughlin|De'Anthony Melton|Sam Merrill|Chimezie Metu|Vasilije Micic|Khris Middleton|Brandon Miller|Jordan Miller|Leonard Miller|Patty Mills|Shake Milton|Justin Minaya|Josh Minott|Davion Mitchell|Donovan Mitchell|Evan Mobley|Isaiah Mobley|Malik Monk|Moses Moody|Xavier Moon|Wendell Moore Jr.|Ja Morant|Markieff Morris|Monte Morris|Marcus Morris Sr.|Trey Murphy III|Dejounte Murray|Jamal Murray|Keegan Murray|Kris Murray|Mike Muscala|Svi Mykhailiuk|Larry Nance Jr.|Andrew Nembhard|Aaron Nesmith|Georges Niang|Daishen Nix|Zeke Nnaji|Miles Norris|Jaylen Nowell|Markquis Nowell|Frank Ntilikina|Jusuf Nurkic|Jordan Nwora|Royce O'Neale|Chuma Okeke|Josh Okogie|Onyeka Okongwu|Isaac Okoro|Victor Oladipo|Kelly Olynyk|Eugene Omoruyi|Cedi Osman|Kelly Oubre Jr.|Chris Paul|Cameron Payne|Gary Payton II|Filip Petrusev|Julian Phillips|Jalen Pickett|Mason Plumlee|Brandin Podziemski|Jakob Poeltl|Aleksej Pokusevski|Jordan Poole|Craig Porter Jr.|Michael Porter Jr.|Otto Porter Jr.|Bobby Portis|Kristaps Porzingis|Micah Potter|Dwight Powell|Norman Powell|Joshua Primo|Taurean Prince|Payton Pritchard|Olivier-Maxence Prosper|Trevelin Queen|Neemias Queta|Immanuel Quickley|Lester Quinones|Julius Randle|Duop Reath|Austin Reaves|Cam Reddish|Paul Reed|Naz Reid|Jared Rhoden|Sir'Jabari Rice|Nick Richards|Josh Richardson|Duncan Robinson|Jerome Robinson|Mitchell Robinson|Orlando Robinson|Jeremiah Robinson-Earl|David Roddy|Ryan Rollins|Derrick Rose|Terry Rozier|Ricky Rubio|Rayan Rupert|D'Angelo Russell|Matt Ryan|Domantas Sabonis|Luka Samanic|Jermaine Samuels Jr.|Adama Sanogo|Gui Santos|Dario Saric|Olivier Sarr|Marcus Sasser|Admiral Schofield|Dennis Schroder|Dereon Seabron|Alperen Sengun|Brice Sensabaugh|Collin Sexton|Landry Shamet|Day'Ron Sharpe|Shaedon Sharpe|Ben Sheppard|Pascal Siakam|Ben Simmons|Anfernee Simons|Jericho Sims|Jalen Slawson|Javonte Smart|Marcus Smart|Dru Smith|Ish Smith|Jalen Smith|Terquavion Smith|Dennis Smith Jr.|Jabari Smith Jr.|Nick Smith Jr.|Jeremy Sochan|Jaden Springer|Lamar Stevens|Isaiah Stewart|Julian Strawther|Max Strus|Jalen Suggs|Cole Swider|Jae'Sean Tate|Jayson Tatum|Terry Taylor|Garrett Temple|Dalen Terry|Daniel Theis|Cam Thomas|Amen Thompson|Ausar Thompson|Klay Thompson|Tristan Thompson|JT Thor|Matisse Thybulle|Xavier Tillman|Jacob Toppin|Obi Toppin|Karl-Anthony Towns|Gary Trent Jr.|Oscar Tshiebwe|P.J. Tucker|Myles Turner|Hunter Tyson|Stanley Umude|Jonas Valanciunas|Fred VanVleet|Jarred Vanderbilt|Devin Vassell|Sasha Vezenkov|Gabe Vincent|Nikola Vucevic|Dean Wade|Franz Wagner|Moritz Wagner|Ish Wainright|Jabari Walker|Jarace Walker|Lonnie Walker IV|Cason Wallace|Jordan Walsh|P.J. Washington|TyTy Washington Jr.|Yuta Watanabe|Lindy Waters III|Trendon Watford|Peyton Watson|Victor Wembanyama|Blake Wesley|Russell Westbrook|Coby White|Derrick White|Dariq Whitehead|Cam Whitmore|Aaron Wiggins|Andrew Wiggins|Lindell Wigginton|Grant Williams|Jalen Williams|Jaylin Williams|Kenrich Williams|Mark Williams|Nate Williams|Patrick Williams|Ziaire Williams|Robert Williams III|Vince Williams Jr.|Zion Williamson|Jalen Wilson|Dylan Windler|James Wiseman|Isaiah Wong|Christian Wood|Delon Wright|Thaddeus Young|Trae Young|Omer Yurtseven|Cody Zeller|Ivica Zubac".split("|");
+
+const TEAMS=["Hawks","Celtics","Nets","Hornets","Bulls","Cavaliers","Mavericks","Nuggets","Pistons","Warriors","Rockets","Pacers","Clippers","Lakers","Grizzlies","Heat","Bucks","Timberwolves","Pelicans","Knicks","Thunder","Magic","76ers","Suns","Trail Blazers","Kings","Spurs","Raptors","Jazz","Wizards"];
+
+const OPTS={
+  stat:[["stats","All stats"],["points","Points"],["rebounds","Rebounds"],["assists","Assists"],["points rebounds assists","PRA"],["three pointers made","3PM"],["steals","Steals"],["blocks","Blocks"]],
+  quarter:[["","Full game"],["in the 1st quarter","Q1"],["in the 2nd quarter","Q2"],["in the 3rd quarter","Q3"],["in the 4th quarter","Q4"],["in the 1st half","1st half"],["in the 2nd half","2nd half"]],
+  court:[["","Any"],["at home","Home"],["on the road","Away"]],
+  period:[["","Any"],["last 5 games","Last 5"],["last 10 games","Last 10"],["last 20 games","Last 20"],["this season","This season"],["last season","Last season"],["in the playoffs","Playoffs"],["career","Career"]],
+  result:[["","Any"],["in wins","Wins"],["in losses","Losses"]]
+};
+const DEFAULT={player:"LeBron James",stat:"stats",quarter:"",court:"",opp:"",period:"last 10 games",lastN:"",result:""};
+let state={...DEFAULT};
+
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+// build chips
+document.querySelectorAll(".chips[data-key]").forEach(box=>{
+  const key=box.dataset.key;
+  OPTS[key].forEach(([val,label])=>{
+    const b=document.createElement("button");
+    b.type="button";b.className="chip"+(val===""?" any":"");b.textContent=label;b.dataset.val=val;
+    b.addEventListener("click",()=>{state[key]=val;if(key==="period"&&val)state.lastN="";sync()});
+    box.appendChild(b);
+  });
+});
+TEAMS.slice().sort().forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent="vs "+t;$("opp").appendChild(o)});
+
+function parts(){
+  const p=[];
+  const per=state.lastN?`last ${state.lastN} games`:state.period;
+  p.push({t:state.player.trim(),key:true});
+  p.push({t:state.stat});
+  if(state.quarter)p.push({t:state.quarter});
+  if(state.court)p.push({t:state.court});
+  if(state.opp)p.push({t:"vs "+state.opp});
+  if(state.result)p.push({t:state.result});
+  if(per)p.push({t:per});
+  return p;
+}
+const question=()=>parts().map(x=>x.t).filter(Boolean).join(" ");
+const slug=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+const urlFor=q=>"https://www.statmuse.com/nba/ask/"+slug(q);
+
+function sync(){
+  document.querySelectorAll(".chips[data-key]").forEach(box=>{
+    const key=box.dataset.key, cur=(key==="period"&&state.lastN)?null:state[key];
+    box.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.val===cur)));
+  });
+  $("opp").value=state.opp; $("lastN").value=state.lastN;
+  if($("player").value!==state.player && document.activeElement!==$("player")) $("player").value=state.player;
+  const has=!!state.player.trim();
+  const ps=parts();
+  $("qtext").innerHTML=ps.map(x=>x.key?(has?`<b>${esc(x.t)}</b>`:`<span class="ph">Pick a player</span>`):esc(x.t)).join(" ");
+  const u=urlFor(question());
+  $("qurl").textContent=has?u:"statmuse.com/nba/ask/…";
+  $("go").href=has?u:"#";
+  ["go","copyQ","copyL"].forEach(id=>$(id).setAttribute("aria-disabled",String(!has)));
+}
+
+// recents
+function renderRecent(){
+  const list=store.get("smb.recent",[]), ul=$("recent");
+  ul.innerHTML="";
+  if(!list.length){ul.innerHTML='<li class="empty">Questions you send to StatMuse show up here.</li>';return}
+  list.forEach((r,i)=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<a href="${esc(urlFor(r.q))}" target="_blank" rel="noopener">${esc(r.q)}</a><span style="display:flex;gap:2px;flex-shrink:0"><button type="button" data-a="load">Edit</button><button type="button" data-a="del" aria-label="Remove">✕</button></span>`;
+    li.querySelector('[data-a="load"]').onclick=()=>{state={...DEFAULT,...r.s};$("player").value=state.player;sync();window.scrollTo({top:0,behavior:"smooth"})};
+    li.querySelector('[data-a="del"]').onclick=()=>{const l=store.get("smb.recent",[]);l.splice(i,1);store.set("smb.recent",l);renderRecent()};
+    ul.appendChild(li);
+  });
+}
+function remember(){
+  const q=question(); let l=store.get("smb.recent",[]).filter(r=>r.q!==q);
+  l.unshift({q,s:{...state}}); store.set("smb.recent",l.slice(0,12)); renderRecent();
+}
+$("go").addEventListener("click",e=>{if(!state.player.trim()){e.preventDefault();$("player").focus();return}remember()});
+
+// copy
+function toast(m){$("toast").textContent=m;clearTimeout(toast.t);toast.t=setTimeout(()=>$("toast").textContent="",1800)}
+async function copy(text,label){
+  try{await navigator.clipboard.writeText(text);toast(label+" copied")}
+  catch(e){const r=document.createRange();r.selectNodeContents($("qurl"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Press Ctrl/Cmd+C to copy")}
+}
+$("copyQ").onclick=()=>copy(question(),"Question");
+$("copyL").onclick=()=>copy(urlFor(question()),"Link");
+$("reset").onclick=()=>{state={...DEFAULT,player:"",period:""};$("player").value="";sync();$("player").focus()};
+
+$("opp").onchange=e=>{state.opp=e.target.value;sync()};
+$("lastN").oninput=e=>{const v=e.target.value.replace(/\D/g,"");state.lastN=v&&+v>0?String(Math.min(+v,82)):"";sync()};
+
+// player combobox
+const inp=$("player"), sug=$("sugg"); let hits=[], idx=-1;
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g,"");
+function showSugg(){
+  const q=norm(inp.value.trim());
+  hits=q?PLAYERS.filter(p=>norm(p).includes(q)).sort((a,b)=>{
+    const sa=norm(a).split(" ").some(w=>w.startsWith(q))?0:1, sb=norm(b).split(" ").some(w=>w.startsWith(q))?0:1;return sa-sb}).slice(0,8):[];
+  idx=-1;
+  if(!hits.length||(hits.length===1&&hits[0]===inp.value)){sug.hidden=true;inp.setAttribute("aria-expanded","false");return}
+  sug.innerHTML=hits.map((h,i)=>{const n=norm(h),k=n.indexOf(q);
+    const html=k>=0&&n.length===h.length?esc(h.slice(0,k))+"<mark>"+esc(h.slice(k,k+q.length))+"</mark>"+esc(h.slice(k+q.length)):esc(h);
+    return `<li role="option" id="o${i}" data-i="${i}">${html}</li>`}).join("");
+  sug.hidden=false;inp.setAttribute("aria-expanded","true");
+}
+function pick(i){state.player=hits[i];inp.value=hits[i];sug.hidden=true;inp.setAttribute("aria-expanded","false");sync()}
+function mark(){sug.querySelectorAll("li").forEach((li,i)=>li.setAttribute("aria-selected",String(i===idx)));inp.setAttribute("aria-activedescendant",idx>=0?"o"+idx:"")}
+inp.addEventListener("input",()=>{state.player=inp.value;sync();showSugg()});
+inp.addEventListener("focus",showSugg);
+inp.addEventListener("blur",()=>setTimeout(()=>{sug.hidden=true;inp.setAttribute("aria-expanded","false")},120));
+sug.addEventListener("mousedown",e=>{const li=e.target.closest("li");if(li){e.preventDefault();pick(+li.dataset.i)}});
+inp.addEventListener("keydown",e=>{
+  const open=!sug.hidden;
+  if(e.key==="ArrowDown"&&open){e.preventDefault();idx=(idx+1)%hits.length;mark()}
+  else if(e.key==="ArrowUp"&&open){e.preventDefault();idx=(idx-1+hits.length)%hits.length;mark()}
+  else if(e.key==="Escape"){sug.hidden=true}
+  else if(e.key==="Enter"){e.preventDefault();if(open&&idx>=0)pick(idx);else if(open&&hits.length&&!PLAYERS.includes(inp.value))pick(0);else if(state.player.trim()){remember();$("go").click()}}
+});
+$("form").addEventListener("submit",e=>e.preventDefault());
+
+inp.value=state.player; sync(); renderRecent();
+</script>

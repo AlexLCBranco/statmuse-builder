@@ -1,0 +1,160 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Label column + control column; stacks on phones (see bottom). */
+.row {
+  display: grid;
+  grid-template-columns: var(--label-col) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.rowLabel {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding-top: 9px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chip {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  background: var(--color-chip);
+  color: var(--color-ink);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  padding: 6px var(--space-3);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-line);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+/* "Any" / "Full game" when on: outlined, so "no filter" reads differently
+   from a real filter. */
+.anyChip[aria-pressed="true"] {
+  background: transparent;
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.field {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) 10px;
+  max-width: 100%;
+}
+
+.number {
+  width: 72px;
+}
+
+.inline {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+/* ---- Player combobox ---- */
+.player {
+  min-width: 0;
+}
+
+/* The list is positioned against this box (input only), so it opens right
+   under the input and covers the hint. */
+.inputWrap {
+  position: relative;
+}
+
+.playerInput {
+  composes: field;
+  width: 100%;
+  font-size: var(--text-lg);
+  padding: 10px var(--space-3);
+}
+
+.player .hint {
+  margin-top: 6px;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + var(--space-1));
+  margin: 0;
+  padding: var(--space-1) 0;
+  list-style: none;
+  max-height: 260px;
+  overflow: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popover);
+}
+
+.suggestions[hidden] {
+  display: none;
+}
+
+.suggestions li {
+  padding: 7px var(--space-3);
+  cursor: pointer;
+}
+
+.suggestions li[aria-selected="true"],
+.suggestions li:hover {
+  background: var(--color-chip);
+}
+
+.suggestions mark {
+  background: none;
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+
+@media (max-width: 520px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .rowLabel {
+    padding-top: 0;
+  }
+}

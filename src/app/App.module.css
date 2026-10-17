@@ -1,0 +1,48 @@
+/* One column: the live question is the hero, the controls are rows of chips
+   under it, recents at the bottom. */
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-block: var(--space-7) var(--space-8);
+  /* Keep clear of phone notches in landscape. */
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--weight-heavy);
+  font-size: var(--text-brand);
+  line-height: var(--line-normal);
+  letter-spacing: var(--tracking-brand);
+  text-transform: uppercase;
+}
+
+.slash {
+  color: var(--color-accent);
+}
+
+.tag {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
