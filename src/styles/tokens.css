@@ -3,23 +3,22 @@
  * Components read these through var(--name) and never hardcode values, so a
  * theme is just a different set of values for the same names.
  *
- * Theme: light by default, dark when the system prefers it. A
- * data-theme="light" / "dark" attribute on <html> forces one (not wired to a
- * toggle yet).
+ * Theme: dark by default, whatever the system prefers. Light is opt-in:
+ * data-theme="light" on <html> switches it (no toggle in the UI yet).
  */
 :root {
-  /* ---- Colours (light) ---- */
-  --color-bg: #f3f1ec;
-  --color-surface: #fbfaf7;
-  --color-ink: #1b1d24;
-  --color-muted: #6a6862;
-  --color-line: #dcd8cf;
-  --color-accent: #d4561c;
-  --color-accent-ink: #ffffff;
-  --color-chip: #ebe7de;
-  --color-focus: #1f5fd1;
-  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.12);
-  color-scheme: light;
+  /* ---- Colours (dark, the default) ---- */
+  --color-bg: #12141a;
+  --color-surface: #1a1d25;
+  --color-ink: #eceae4;
+  --color-muted: #9b9a94;
+  --color-line: #2d313b;
+  --color-accent: #f07a3e;
+  --color-accent-ink: #14100c;
+  --color-chip: #242833;
+  --color-focus: #7aa7ff;
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
 
   /* ---- Fonts ---- */
   --font-display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
@@ -63,34 +62,17 @@
   --duration-fast: 0.2s;
 }
 
-/* Same dark values twice: once for "system prefers dark" (unless forced
-   light), once for "forced dark". */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-bg: #12141a;
-    --color-surface: #1a1d25;
-    --color-ink: #eceae4;
-    --color-muted: #9b9a94;
-    --color-line: #2d313b;
-    --color-accent: #f07a3e;
-    --color-accent-ink: #14100c;
-    --color-chip: #242833;
-    --color-focus: #7aa7ff;
-    --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --color-bg: #12141a;
-  --color-surface: #1a1d25;
-  --color-ink: #eceae4;
-  --color-muted: #9b9a94;
-  --color-line: #2d313b;
-  --color-accent: #f07a3e;
-  --color-accent-ink: #14100c;
-  --color-chip: #242833;
-  --color-focus: #7aa7ff;
-  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
-  color-scheme: dark;
+/* Light theme, opt-in only. */
+:root[data-theme="light"] {
+  --color-bg: #f3f1ec;
+  --color-surface: #fbfaf7;
+  --color-ink: #1b1d24;
+  --color-muted: #6a6862;
+  --color-line: #dcd8cf;
+  --color-accent: #d4561c;
+  --color-accent-ink: #ffffff;
+  --color-chip: #ebe7de;
+  --color-focus: #1f5fd1;
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.12);
+  color-scheme: light;
 }

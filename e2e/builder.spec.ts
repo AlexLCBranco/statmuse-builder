@@ -112,3 +112,20 @@ test('fits a 375px phone screen without sideways scrolling', async ({ page }) =>
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)
 })
+
+test.describe('theme', () => {
+  const background = (page: Page) => page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  const DARK_BG = 'rgb(18, 20, 26)'
+  const LIGHT_BG = 'rgb(243, 241, 236)'
+
+  test('is dark by default, even when the system prefers light', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    expect(await background(page)).toBe(DARK_BG)
+  })
+
+  test('switches to light only with data-theme="light"', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
+    expect(await background(page)).toBe(LIGHT_BG)
+  })
+})

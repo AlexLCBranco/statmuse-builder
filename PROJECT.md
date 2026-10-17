@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-10-17, v0.1.0_
+_Last updated: 2026-10-17, v0.1.1_
 
 ## What it is
 
@@ -38,7 +38,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.1.0)
+## What works now (v0.1.1)
 
 - Live question preview (sentence + exact URL)
 - Player box with suggestions from 536 2023-24 players; any typed name works.
@@ -51,9 +51,10 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Ask StatMuse (a real link, new tab), Copy question, Copy link, Clear
 - Recent: last 12 sent questions, saved in localStorage; Edit loads one back,
   ✕ removes it
-- Light/dark from the system setting; fits a 375px phone with no sideways
-  scroll
-- Tests: 63 unit tests (domain), 4 Playwright e2e tests. `npm run check` runs
+- Dark theme by default, whatever the system prefers; light is opt-in via
+  `data-theme="light"` on `<html>` (no toggle yet). Fits a 375px phone with
+  no sideways scroll
+- Tests: 63 unit tests (domain), 6 Playwright e2e tests. `npm run check` runs
   lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the live
   site
 
@@ -77,14 +78,11 @@ This is a sample, not proof that every combination works.
 
 ## Next steps
 
-- Decide on dark-by-default (see open problems)
-- Maybe: a theme toggle (tokens already support `data-theme`)
+- Maybe: a light/dark toggle (tokens already support `data-theme="light"`)
 - Maybe: refresh the player list to the current season
 
 ## Open problems
 
-- Theme follows the system (light unless the OS is dark), as requested for
-  this project; the owner's general rule is dark by default. Needs a decision.
 - PRA ("points rebounds assists") can be read by StatMuse as just points in
   some combos (seen with the Jokic query).
 - "This season" returns last season's numbers until the new season has games.
