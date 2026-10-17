@@ -169,6 +169,22 @@ test('vs player box: picks an opponent player for a matchup question', async ({ 
   await expect(vs).toHaveValue('Kon Knueppel')
 })
 
+test('without box: a teammate who sat out', async ({ page }) => {
+  await page.getByRole('combobox', { name: 'Player', exact: true }).fill('Draymond Green')
+  await chip(page, 'Period', 'Career').click()
+
+  const without = page.getByRole('combobox', { name: 'Without' })
+  await without.fill('stephen cu')
+  await expect(page.getByRole('listbox', { name: 'Teammates' }).getByRole('option')).toHaveText(['Stephen Curry'])
+  await without.press('Enter')
+  await expect(without).toHaveValue('Stephen Curry')
+  await expect(question(page)).toHaveText('Draymond Green stats without Stephen Curry career')
+  await expect(askLink(page)).toHaveAttribute('href', `${ASK}draymond-green-stats-without-stephen-curry-career`)
+
+  await page.getByRole('button', { name: 'Clear' }).click()
+  await expect(without).toHaveValue('')
+})
+
 test('copy link puts the exact URL on the clipboard', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.getByRole('button', { name: 'Copy link' }).click()

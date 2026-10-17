@@ -32,6 +32,7 @@ describe('buildQuestion', () => {
     [{ opponent: 'Lakers' }, 'Jayson Tatum stats vs Lakers'],
     [{ opponent: 'Trail Blazers' }, 'Jayson Tatum stats vs Trail Blazers'],
     [{ vsPlayer: 'Kon Knueppel' }, 'Jayson Tatum stats vs Kon Knueppel'],
+    [{ without: 'Jaylen Brown' }, 'Jayson Tatum stats without Jaylen Brown'],
     [{ result: 'in wins' }, 'Jayson Tatum stats in wins'],
     [{ result: 'in losses' }, 'Jayson Tatum stats in losses'],
     [{ period: 'career' }, 'Jayson Tatum stats career'],
@@ -63,6 +64,17 @@ describe('buildQuestion', () => {
   it('trims spaces around a typed opponent player', () => {
     expect(buildQuestion(q({ vsPlayer: '  Kon Knueppel ' }))).toBe('Jayson Tatum stats vs Kon Knueppel')
     expect(buildQuestion(q({ vsPlayer: '   ' }))).toBe('Jayson Tatum stats')
+  })
+
+  it('puts "without" after the vs parts and before the result', () => {
+    expect(
+      buildQuestion(q({ stat: 'points', opponent: 'Lakers', vsPlayer: 'LeBron James', without: 'Jaylen Brown', result: 'in wins' })),
+    ).toBe('Jayson Tatum points vs Lakers vs LeBron James without Jaylen Brown in wins')
+  })
+
+  it('trims spaces around a typed "without" player', () => {
+    expect(buildQuestion(q({ without: ' Jaylen Brown  ' }))).toBe('Jayson Tatum stats without Jaylen Brown')
+    expect(buildQuestion(q({ without: '  ' }))).toBe('Jayson Tatum stats')
   })
 
   it('combines some filters and skips the empty ones', () => {

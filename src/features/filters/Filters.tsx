@@ -63,6 +63,20 @@ export function Filters({ query, onChange, onSubmit }: Props) {
       </div>
 
       <div className={styles.row}>
+        <label className={styles.rowLabel} htmlFor="without">
+          Without
+        </label>
+        <PlayerCombobox
+          id="without"
+          value={query.without}
+          onChange={(without) => onChange({ without })}
+          onSubmit={onSubmit}
+          placeholder="A teammate who sat out"
+          listLabel="Teammates"
+        />
+      </div>
+
+      <div className={styles.row}>
         <div className={styles.rowLabel}>Period</div>
         <div className={styles.stack}>
           <ChipGroup
