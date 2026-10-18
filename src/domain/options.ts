@@ -14,10 +14,10 @@ export const STAT_OPTIONS: readonly Option[] = [
   { value: 'points', label: 'Points' },
   { value: 'rebounds', label: 'Rebounds' },
   { value: 'assists', label: 'Assists' },
-  { value: 'points rebounds assists', label: 'PRA' },
-  { value: 'three pointers made', label: '3PM' },
-  { value: 'steals', label: 'Steals' },
-  { value: 'blocks', label: 'Blocks' },
+  { value: 'field goals attempted', label: 'FGA' },
+  { value: 'field goals made', label: 'FGM' },
+  { value: 'three pointers attempted', label: '3PA' },
+  { value: 'two pointers attempted', label: '2PA' },
 ]
 
 export const QUARTER_OPTIONS: readonly Option[] = [
