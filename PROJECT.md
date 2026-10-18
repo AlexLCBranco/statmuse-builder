@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-10-18, v0.6.0_
+_Last updated: 2026-10-18, v0.6.1_
 
 ## What it is
 
@@ -38,7 +38,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.6.0)
+## What works now (v0.6.1)
 
 - Live question preview (sentence + exact URL)
 - Player box with suggestions from 622 players on 2026-27 NBA rosters
@@ -46,8 +46,8 @@ Layers: `app -> features -> lib -> domain -> styles`
   refreshes it); any typed name works.
   Arrow keys + Enter pick a suggestion; Enter with a player chosen sends the
   question
-- Chips: stat (all / points / rebounds / assists / FGA / FGM / 3PA /
-  2PA), quarter/half, home/away, wins/losses, period (last 5/10/20, this
+- Chips: stat (all / points / rebounds / assists / FGA / FGM / 3PA / 3PM),
+  quarter/half, home/away, wins/losses, period (last 5/10/20, this
   season, last season, playoffs, career) + custom "last N games" (1–82, wins
   over the chips)
 - Opponent box: a dropdown you can type into. Opening it (click or ▾)

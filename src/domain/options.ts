@@ -17,7 +17,7 @@ export const STAT_OPTIONS: readonly Option[] = [
   { value: 'field goals attempted', label: 'FGA' },
   { value: 'field goals made', label: 'FGM' },
   { value: 'three pointers attempted', label: '3PA' },
-  { value: 'two pointers attempted', label: '2PA' },
+  { value: 'three pointers made', label: '3PM' },
 ]
 
 export const QUARTER_OPTIONS: readonly Option[] = [
