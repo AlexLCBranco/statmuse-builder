@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { FACTORY_SELECTIONS } from './defaults'
 import {
   activeFilterCount,
   buildQuestion,
@@ -285,6 +286,22 @@ describe('clearAll', () => {
   it('resets everything except mode and view', () => {
     const query = log({ quarter: 'in the 4th quarter', opponent: 'Heat', lastN: '7', team: 'Lakers' })
     expect(clearAll(query)).toEqual({ ...DEFAULT_QUERY, view: 'gamelog' })
+  })
+
+  it('puts the button rows back to the saved defaults, and still empties the boxes', () => {
+    const defaults = { ...FACTORY_SELECTIONS, stat: 'assists', quarter: 'in the 4th quarter', result: 'in wins', lastN: '7' }
+    const query = q({ stat: 'points', court: 'at home', opponent: 'Heat', vsPlayer: 'LeBron James', without: 'Al Horford', period: 'career' })
+    expect(clearAll(query, defaults)).toEqual({ ...DEFAULT_QUERY, ...defaults })
+  })
+
+  it('keeps the current mode and view, whatever the saved defaults say', () => {
+    const defaults = { ...FACTORY_SELECTIONS, mode: 'leaders' as const, stat: 'rebounds' }
+    expect(clearAll(log({ result: 'in wins' }), defaults)).toEqual({ ...DEFAULT_QUERY, view: 'gamelog', stat: 'rebounds' })
+  })
+
+  it('a saved stat this mode does not offer becomes the mode default', () => {
+    const defaults = { ...FACTORY_SELECTIONS, stat: 'turnovers' }
+    expect(clearAll(leaders({}), defaults).stat).toBe('points')
   })
 
   it('keeps leaders mode, with points as the stat', () => {

@@ -19,3 +19,11 @@ export function writeJson(key: string, value: unknown): void {
     // Not saved; the in-memory copy still works for this visit.
   }
 }
+
+export function removeKey(key: string): void {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // Storage is unavailable, so nothing was saved there either.
+  }
+}

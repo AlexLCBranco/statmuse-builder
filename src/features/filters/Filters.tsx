@@ -38,6 +38,8 @@ interface Props {
   onSubmit: () => void
   /** The saved Recent list, for the empty player/team box. */
   recent: readonly RecentSearch[]
+  /** Shown at the right end of the mode/view line (the defaults gear). */
+  corner?: ReactNode
 }
 
 /**
@@ -45,7 +47,7 @@ interface Props {
  * player (or team), then the filters this mode offers. Short filters share a
  * row so everything fits one desktop screen.
  */
-export function Filters({ query, onChange, onReplace, onSubmit, recent }: Props) {
+export function Filters({ query, onChange, onReplace, onSubmit, recent, corner }: Props) {
   const leaders = isLeaders(query)
   const offers = (key: FilterKey) => offersFilter(query, key)
 
@@ -96,6 +98,7 @@ export function Filters({ query, onChange, onReplace, onSubmit, recent }: Props)
             onChange={(view) => onChange({ view: view as View })}
           />
         )}
+        {corner}
       </div>
 
       {leaders ? (

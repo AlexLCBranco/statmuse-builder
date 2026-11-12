@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { isLeaders } from '../domain/availability'
-import { buildQuestion, clearAll, DEFAULT_QUERY, type QueryState } from '../domain/query'
+import { applyFactory, startQuery } from '../domain/defaults'
+import { buildQuestion, clearAll, type QueryState } from '../domain/query'
+import { DefaultsMenu } from '../features/defaults/DefaultsMenu'
+import { useDefaults } from '../features/defaults/useDefaults'
 import { Filters } from '../features/filters/Filters'
 import { QuestionCard } from '../features/question/QuestionCard'
 import { RecentList } from '../features/recent/RecentList'
@@ -15,7 +18,9 @@ import styles from './App.module.css'
  * it on each render. That's small enough that no state library is needed.
  */
 export function App() {
-  const [query, setQuery] = useState<QueryState>(DEFAULT_QUERY)
+  const { defaults, save: saveDefaults, reset: resetDefaults } = useDefaults()
+  // The first render starts from the saved default selections, if any.
+  const [query, setQuery] = useState<QueryState>(() => startQuery(defaults))
   const { saved, add, removeRecent, pin, unpin } = useSaved()
   const askRef = useRef<HTMLAnchorElement>(null)
   const mainRef = useRef<HTMLElement>(null)
@@ -39,8 +44,14 @@ export function App() {
   }, [])
 
   function clear() {
-    setQuery(clearAll(query))
+    setQuery(clearAll(query, defaults))
     focusFirst()
+  }
+
+  // Forgets the saved defaults and shows the factory ones right away.
+  function factoryReset() {
+    resetDefaults()
+    setQuery(applyFactory(query))
   }
 
   function edit(savedQuery: QueryState) {
@@ -70,7 +81,14 @@ export function App() {
             onMissingSubject={focusFirst}
             onClear={clear}
           />
-          <Filters query={query} onChange={update} onReplace={setQuery} onSubmit={ask} recent={saved.recent} />
+          <Filters
+            query={query}
+            onChange={update}
+            onReplace={setQuery}
+            onSubmit={ask}
+            recent={saved.recent}
+            corner={<DefaultsMenu onSave={() => saveDefaults(query)} onReset={factoryReset} />}
+          />
         </main>
         <RecentList saved={saved} onEdit={edit} onRemove={removeRecent} onPin={pin} onUnpin={unpin} />
       </div>

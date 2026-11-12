@@ -31,6 +31,12 @@ export interface QueryState {
   result: string
 }
 
+/**
+ * The button rows: the part of a query that "default selections" saves.
+ * `period` and `lastN` go together (the custom "last N games").
+ */
+export type Selections = Pick<QueryState, 'mode' | 'view' | 'stat' | 'quarter' | 'court' | 'result' | 'period' | 'lastN'>
+
 /** First load: nothing chosen, "All stats", every filter on "Any". */
 export const DEFAULT_QUERY: QueryState = {
   mode: 'player',
@@ -159,9 +165,15 @@ export function resetRow(query: QueryState, key: FilterKey): QueryState {
   return { ...query, [key]: '' }
 }
 
-/** "Clear all": everything back to the start, but stay in this mode and view. */
-export function clearAll(query: QueryState): QueryState {
-  return { ...DEFAULT_QUERY, mode: query.mode, view: query.view, stat: defaultStat(query) }
+/**
+ * "Clear all": the boxes are emptied and the button rows go back to the
+ * user's saved defaults (the factory ones when nothing is saved), but the
+ * mode and view stay as they are. A saved stat this mode does not offer
+ * becomes the mode's own default.
+ */
+export function clearAll(query: QueryState, defaults: Selections | null = null): QueryState {
+  const next: QueryState = { ...DEFAULT_QUERY, ...defaults, mode: query.mode, view: query.view }
+  return { ...next, stat: effectiveStat(next) }
 }
 
 /**

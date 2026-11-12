@@ -9,6 +9,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--chip-gap) var(--space-4);
+  /* The defaults gear (right end) lines up with the reset ✕ column. */
+  align-items: center;
 }
 
 .switch {
