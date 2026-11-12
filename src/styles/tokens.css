@@ -29,9 +29,12 @@
   --text-md: 14px;
   --text-base: 15px;
   --text-lg: 17px;
+  --text-label: 14px;
+  --text-control: 17px;
+  --text-input: 18px;
   --text-brand: 22px;
   --text-heading: 18px;
-  --text-hero: clamp(26px, 5vw, 30px);
+  --text-hero: clamp(26px, 5vw, 36px);
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -55,14 +58,19 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-full: 999px;
-  --page-max: 1180px;
-  --side-col: 340px;
-  --label-col: 84px;
-  --label-nudge: 5px;
-  --reset-col: 28px;
-  --space-row: 8px;
+  --side-col: 380px;
+  --label-col: 104px;
+  --space-row: 10px;
+
+  /* ---- Click targets: big enough to hit without aiming ---- */
+  --control-h: 48px;
+  --input-h: 52px;
+  --hit: 44px;
+  --control-pad: 20px;
+  --chip-gap: 10px;
   --popover-min: 260px;
-  --gutter: 16px;
+  --gutter: 24px;
+  --gutter-phone: 16px;
   --duration-fast: 0.2s;
 }
 

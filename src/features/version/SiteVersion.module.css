@@ -1,5 +1,7 @@
-/* Pinned to the window's bottom-right corner, in the page's bottom padding,
-   so it never sits on top of anything. */
+/* Pinned to the window's bottom-right corner. At the end of the page it sits
+   in the page's bottom padding, on top of nothing; while a long page scrolls,
+   content passes under it, so it has the page colour behind it to stay
+   readable. */
 .version {
   position: fixed;
   right: max(var(--space-2), env(safe-area-inset-right, 0px));
@@ -8,6 +10,8 @@
   font-size: var(--text-xs);
   line-height: var(--line-normal);
   color: var(--color-muted);
-  opacity: 0.7;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-1);
   cursor: default;
 }

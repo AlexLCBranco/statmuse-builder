@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-12, v0.8.0_
+_Last updated: 2026-11-12, v0.9.0_
 
 ## What it is
 
@@ -46,7 +46,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.8.0)
+## What works now (v0.9.0)
 
 - **Three kinds of question**, picked with two switches above the first row:
   - Player / Averages: "LeBron James points in wins last 10 games"
@@ -88,10 +88,16 @@ Layers: `app -> features -> lib -> domain -> styles`
   removes it. **Pinned**: ☆ on a Recent row moves it to a Pinned group above
   (max 12, never expire, not counted in the 12 recents, saved under
   `smb.pinned`); ★ sends it back to Recent
-- **One screen**: at 1366x768 the question card and every filter row are
-  visible without scrolling, with Recent beside them (it drops below under
-  1000px). Court + Result share a row, as do Vs player + Without. Fits a
-  375px phone with no sideways scroll
+- **Full-width layout with big click targets** (v0.9.0): the page starts at
+  the left edge (24px padding) and uses the whole window; the builder takes
+  the space, Recent is a fixed 380px column on the right (below the builder
+  under 1100px). Chips and switches are 48px tall with 17px text, action
+  buttons and text boxes 52px, Recent rows 52px with 44x44 star / ✕ / Edit
+  buttons set apart. Sizes are tokens (`--control-h`, `--input-h`, `--hit`).
+  At 1920px every chip group is on one line and everything fits one screen.
+  At 1366x768 Stat and Period wrap to two lines and the page scrolls
+  vertically (it no longer fits one screen at that size). Fits a 375px phone
+  with no sideways scroll
 - **Version badge**: "v0.8.0" small and muted in the bottom-right corner,
   with the commit and build time in its tooltip; the same three values are
   served at `/version.json` (no-cache on Vercel, via `vercel.json`).
@@ -102,7 +108,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Dark theme only (the opt-in light theme was removed in v0.7.0)
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
-- Tests: 151 unit tests (domain + the version check), 23 Playwright e2e tests. `npm run check`
+- Tests: 151 unit tests (domain + the version check), 26 Playwright e2e tests. `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
 
@@ -193,5 +199,10 @@ This is a sample, not proof that every combination works.
 - "This season" returns last season's numbers until the new season has games.
 - The player list is a snapshot of 2026-27 rosters (incl. two-way players);
   later signings get no suggestions until re-synced (typing still works).
+- At 1366x768 the filter rows no longer fit one screen (Period ends about
+  170px below the fold): the 48px+ targets asked for in v0.9.0 need more
+  height than that window has.
+- The version badge is fixed to the window corner, so on a page long enough
+  to scroll, content passes under it.
 - The empty box's recent groups are built from Recent only; a pinned search
   does not appear there.

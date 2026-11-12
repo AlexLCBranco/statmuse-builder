@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 const ASK = 'https://www.statmuse.com/nba/ask/'
 
@@ -623,47 +623,201 @@ test('Recent entries saved by v0.6 (no mode, team or view) still load', async ({
   await expect(playerList(page).getByRole('group', { name: 'Recent players' }).getByRole('option')).toHaveText(['LeBron James'])
 })
 
-test.describe('one screen at 1366x768', () => {
+/** Fills in the busiest state: a long question, the warning, every ✕ showing. */
+async function fillEverything(page: Page) {
+  await playerBox(page).fill('Shai Gilgeous-Alexander')
+  await chip(page, 'Stat', '3PA').click()
+  await chip(page, 'Quarter', 'Q4').click()
+  await chip(page, 'Court', 'Away').click()
+  await chip(page, 'Result', 'Losses').click()
+  await page.getByRole('combobox', { name: 'Opponent' }).fill('trail')
+  await page.getByRole('combobox', { name: 'Opponent' }).press('Enter')
+  await page.getByRole('combobox', { name: 'Vs player' }).fill('Victor Wembanyama')
+  await page.getByRole('combobox', { name: 'Without' }).fill('Jalen Williams')
+  await chip(page, 'Period', 'Last 20').click()
+  await page.getByRole('combobox', { name: 'Without' }).blur()
+  await expect(page.getByTestId('filter-warning')).toBeVisible()
+}
+
+/**
+ * Nothing overlaps, no horizontal scrollbar, and no button text is clipped.
+ * "Overlap" is checked between every pair of visible buttons, links and text
+ * boxes (the ▾ inside a team box is meant to sit on it, so it is skipped).
+ */
+async function expectCleanLayout(page: Page) {
+  const problems = await page.evaluate(() => {
+    const found: string[] = []
+    const doc = document.documentElement
+    if (doc.scrollWidth > doc.clientWidth) found.push(`horizontal scroll: ${doc.scrollWidth} > ${doc.clientWidth}`)
+    const name = (el: Element) => el.getAttribute('aria-label') || el.textContent?.trim() || el.id || el.tagName
+    const controls = [...document.querySelectorAll('button, a, input')].filter((el) => {
+      const box = el.getBoundingClientRect()
+      return box.width > 0 && box.height > 0 && !/^Show /.test(el.getAttribute('aria-label') ?? '')
+    })
+    for (const el of controls) {
+      if (el.tagName !== 'INPUT' && (el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)) {
+        found.push(`clipped text: ${name(el)}`)
+      }
+      const box = el.getBoundingClientRect()
+      if (box.left < 0 || box.right > doc.clientWidth) found.push(`outside the window: ${name(el)}`)
+    }
+    for (let i = 0; i < controls.length; i++) {
+      for (let j = i + 1; j < controls.length; j++) {
+        const a = controls[i]!.getBoundingClientRect()
+        const b = controls[j]!.getBoundingClientRect()
+        // More than a pixel in common in both directions.
+        const acrossBy = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+        const downBy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+        if (acrossBy > 1 && downBy > 1) found.push(`overlap: ${name(controls[i]!)} / ${name(controls[j]!)}`)
+      }
+    }
+    return found
+  })
+  expect(problems).toEqual([])
+}
+
+/** How many lines the buttons of a chip group take. */
+const chipLines = (page: Page, name: string) =>
+  group(page, name).evaluate(
+    (el) => new Set([...el.querySelectorAll('button')].map((b) => Math.round(b.getBoundingClientRect().top))).size,
+  )
+
+/** An element's box and its text size in px. */
+async function measure(locator: Locator) {
+  const box = (await locator.boundingBox())!
+  const fontSize = await locator.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+  return { ...box, fontSize }
+}
+
+test.describe('layout at 1920x1080', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } })
+
+  test('uses the full width: builder from the left edge, Recent as a 380px column', async ({ page }) => {
+    const builder = (await page.getByRole('main').boundingBox())!
+    const side = (await page.getByRole('complementary').boundingBox())!
+    expect(builder.x).toBe(24)
+    expect(side.width).toBe(380)
+    expect(side.x + side.width).toBe(1920 - 24)
+    // The builder takes all the space up to the Recent column.
+    expect(side.x - (builder.x + builder.width)).toBeLessThanOrEqual(32)
+  })
+
+  test('every chip group fits on one line, and everything fits the screen', async ({ page }) => {
+    await page.evaluate(() => document.fonts.ready)
+    await seedRecent(page, SEEDED)
+    await fillEverything(page)
+    for (const name of ['Mode', 'View', 'Stat', 'Quarter', 'Court', 'Result', 'Period']) {
+      expect(await chipLines(page, name), name).toBe(1)
+    }
+    await expectCleanLayout(page)
+    // All filter rows are on screen without scrolling.
+    const last = (await page.getByTestId('filter-row').last().boundingBox())!
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    expect(last.y + last.height).toBeLessThanOrEqual(1080)
+
+    await chip(page, 'Mode', 'Team leaders').click()
+    for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period']) expect(await chipLines(page, name), name).toBe(1)
+    await expectCleanLayout(page)
+  })
+
+  test('click targets are big', async ({ page }) => {
+    await seedRecent(page, SEEDED)
+    await recent(page).getByRole('button', { name: /^Pin / }).first().click()
+
+    // Chips and segmented toggles: 48px tall, 17px text.
+    for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period', 'Mode', 'View']) {
+      for (const button of await group(page, name).getByRole('button').all()) {
+        const { height, fontSize } = await measure(button)
+        expect(height, name).toBeGreaterThanOrEqual(48)
+        expect(fontSize, name).toBe(17)
+      }
+    }
+    // Chips: 20px padding each side, 10px apart.
+    const first = await measure(chip(page, 'Stat', 'All stats'))
+    const second = await measure(chip(page, 'Stat', 'Points'))
+    expect(second.x - (first.x + first.width)).toBeCloseTo(10, 0)
+    expect(await chip(page, 'Stat', 'Points').evaluate((el) => getComputedStyle(el).paddingLeft)).toBe('20px')
+
+    // Action buttons: 52px tall, 17px text; Ask is the widest.
+    const actions = [askLink(page), ...['Copy question', 'Copy link', 'Clear all'].map((name) => page.getByRole('button', { name }))]
+    const sizes = await Promise.all(actions.map(measure))
+    for (const { height, fontSize } of sizes) {
+      expect(height).toBeGreaterThanOrEqual(52)
+      expect(fontSize).toBe(17)
+    }
+    expect(sizes[0]!.width).toBeGreaterThan(Math.max(...sizes.slice(1).map((s) => s.width)))
+
+    // Text boxes: 52px tall, 18px text.
+    const boxes = [
+      playerBox(page),
+      page.getByRole('combobox', { name: 'Opponent' }),
+      page.getByRole('combobox', { name: 'Vs player' }),
+      page.getByRole('combobox', { name: 'Without' }),
+      page.getByRole('spinbutton', { name: 'Last N games' }),
+    ]
+    for (const input of boxes) {
+      const { height, fontSize } = await measure(input)
+      expect(height).toBeGreaterThanOrEqual(52)
+      expect(fontSize).toBe(18)
+    }
+
+    // Row labels: 14px, centered on the first line of their row.
+    const rows: [string, Locator][] = [
+      ['Stat', chip(page, 'Stat', 'All stats')],
+      ['Quarter', chip(page, 'Quarter', 'Full game')],
+      ['Result', chip(page, 'Result', 'Any')],
+      ['Period', chip(page, 'Period', 'Any')],
+      ['Player', playerBox(page)],
+      ['Opponent', page.getByRole('combobox', { name: 'Opponent' })],
+      ['Without', page.getByRole('combobox', { name: 'Without' })],
+    ]
+    for (const [label, control] of rows) {
+      const text = await measure(page.locator('form').locator('label, div').filter({ hasText: new RegExp(`^${label}$`) }).last())
+      const target = (await control.boundingBox())!
+      expect(text.fontSize, label).toBe(14)
+      expect(Math.abs(text.y + text.height / 2 - (target.y + target.height / 2)), label).toBeLessThanOrEqual(1)
+    }
+
+    // Recent and Pinned rows: 17px text, 52px rows, 44x44 controls with a gap.
+    for (const list of [recent(page), pinned(page)]) {
+      const row = list.getByRole('listitem').first()
+      expect((await measure(row)).height).toBeGreaterThanOrEqual(52)
+      expect((await measure(row.getByRole('link'))).fontSize).toBe(17)
+      const buttons = await Promise.all((await row.getByRole('button').all()).map(measure))
+      expect(buttons.length).toBeGreaterThanOrEqual(2)
+      for (const { width, height } of buttons) {
+        expect(width).toBeGreaterThanOrEqual(44)
+        expect(height).toBeGreaterThanOrEqual(44)
+      }
+      for (let i = 1; i < buttons.length; i++) {
+        const gap = buttons[i]!.x - (buttons[i - 1]!.x + buttons[i - 1]!.width)
+        expect(gap).toBeGreaterThanOrEqual(8)
+      }
+    }
+  })
+})
+
+test.describe('layout at 1366x768', () => {
   test.use({ viewport: { width: 1366, height: 768 } })
 
-  /** The question card and every filter row are inside the window, unscrolled. */
-  async function expectAllVisible(page: Page) {
-    const rows = page.getByTestId('filter-row')
-    await expect(rows.last()).toBeVisible()
-    const card = await page.getByRole('region', { name: 'Your question' }).boundingBox()
-    const last = await rows.last().boundingBox()
-    expect(await page.evaluate(() => window.scrollY)).toBe(0)
-    expect(card!.y).toBeGreaterThanOrEqual(0)
-    expect(last!.y + last!.height).toBeLessThanOrEqual(768)
-  }
-
-  test('the question card and all filter rows fit without scrolling', async ({ page }) => {
+  test('two columns, nothing overlapping, clipped or scrolling sideways', async ({ page }) => {
     await page.evaluate(() => document.fonts.ready)
-    await expectAllVisible(page)
-    // Period is the last row.
-    await expect(page.getByTestId('filter-row').last().getByRole('group', { name: 'Period' })).toBeVisible()
+    await seedRecent(page, SEEDED)
+    await expectCleanLayout(page)
 
-    // Worst case: a long question, the warning, and every ✕ showing.
-    await playerBox(page).fill('Shai Gilgeous-Alexander')
-    await chip(page, 'Stat', '3PA').click()
-    await chip(page, 'Quarter', 'Q4').click()
-    await chip(page, 'Court', 'Away').click()
-    await chip(page, 'Result', 'Losses').click()
-    await page.getByRole('combobox', { name: 'Opponent' }).fill('trail')
-    await page.getByRole('combobox', { name: 'Opponent' }).press('Enter')
-    await page.getByRole('combobox', { name: 'Vs player' }).fill('Victor Wembanyama')
-    await page.getByRole('combobox', { name: 'Without' }).fill('Jalen Williams')
-    await chip(page, 'Period', 'Last 20').click()
-    await page.getByRole('combobox', { name: 'Without' }).blur()
-    await expect(page.getByTestId('filter-warning')).toBeVisible()
-    await expectAllVisible(page)
+    const builder = (await page.getByRole('main').boundingBox())!
+    const side = (await page.getByRole('complementary').boundingBox())!
+    expect(builder.x).toBe(24)
+    expect(side.width).toBe(380)
+    expect(side.x).toBeGreaterThan(builder.x + builder.width)
 
-    // Leaders mode and game by game fit too.
+    await fillEverything(page)
+    await expectCleanLayout(page)
     await chip(page, 'Mode', 'Team leaders').click()
-    await expectAllVisible(page)
+    await expectCleanLayout(page)
     await chip(page, 'Mode', 'Player').click()
     await chip(page, 'View', 'Game by game').click()
-    await expectAllVisible(page)
+    await expectCleanLayout(page)
   })
 })
 
@@ -709,7 +863,8 @@ test('shows its version in the bottom-right corner and serves /version.json', as
   expect(title.startsWith(`Version ${version} · commit `)).toBe(true)
   expect(title).toMatch(/ · commit [0-9a-f]{7}\+?, built /)
 
-  // In the corner of the window, on top of nothing.
+  // In the corner of the window; at the end of the page, on top of nothing.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
   const box = (await badge.boundingBox())!
   const viewport = page.viewportSize()!
   expect(viewport.width - (box.x + box.width)).toBeLessThan(24)
@@ -731,4 +886,3 @@ test('shows its version in the bottom-right corner and serves /version.json', as
   // The live site must not cache it (vercel.json); the local preview server sets no such header.
   if (process.env.BASE_URL) expect(response.headers()['cache-control']).toContain('no-cache')
 })
-

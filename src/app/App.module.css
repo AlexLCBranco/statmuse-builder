@@ -1,9 +1,7 @@
-/* Desktop: the builder (question on top, filter rows under it) with Recent
-   beside it, so everything is on one screen. Narrower: one column, Recent
-   at the bottom. */
+/* The page uses the whole window: the builder (question on top, filter rows
+   under it) takes the left, Recent is a fixed column on the right. Narrower
+   windows: one column, Recent at the bottom. */
 .page {
-  max-width: var(--page-max);
-  margin: 0 auto;
   padding-block: var(--space-4) var(--space-7);
   /* Keep clear of phone notches in landscape. */
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
@@ -20,16 +18,23 @@
   align-items: start;
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1100px) {
   .layout {
     grid-template-columns: minmax(0, 1fr) var(--side-col);
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-left: max(var(--gutter-phone), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--gutter-phone), env(safe-area-inset-right, 0px));
   }
 }
 
 .main {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
 }
 

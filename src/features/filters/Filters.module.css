@@ -8,7 +8,7 @@
 .switches {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--chip-gap) var(--space-4);
 }
 
 .switch {
@@ -19,12 +19,14 @@
 }
 
 .switchOption {
-  font-size: var(--text-sm);
+  min-height: var(--control-h);
+  font-size: var(--text-control);
   font-weight: var(--weight-semibold);
+  white-space: nowrap;
   background: transparent;
   color: var(--color-muted);
   border: 0;
-  padding: var(--space-1) var(--space-3);
+  padding: 0 var(--control-pad);
   cursor: pointer;
 }
 
@@ -45,33 +47,44 @@
 /* A row holds one filter, or two short ones side by side. */
 .row {
   display: flex;
-  gap: var(--space-2) var(--space-5);
+  gap: var(--space-row) var(--space-5);
   min-width: 0;
 }
 
 /* One filter: label column, control, and a slot for its reset button.
-   The slot is always there, so the ✕ appearing never moves anything. */
+   The slot is always there, so the ✕ appearing never moves anything.
+   --row-h is the height of the row's first line: the label and the ✕ are
+   centered on it, so they line up with the chips or the text box. */
 .field {
+  --row-h: var(--control-h);
   flex: 1 1 0;
   display: grid;
-  grid-template-columns: var(--label-col) minmax(0, 1fr) var(--reset-col);
+  grid-template-columns: var(--label-col) minmax(0, 1fr) var(--hit);
   gap: var(--space-2);
   align-items: start;
   min-width: 0;
 }
 
+/* Rows with a text box (Period has the "last N" box) are a little taller
+   than rows of chips. */
+.field:has(> .control > .player, > .control > .team, .lastN) {
+  --row-h: var(--input-h);
+}
+
 /* The second filter of a pair sits right after the first; its label only
    needs to be as wide as its text. */
 .row > .field + .field {
-  grid-template-columns: auto minmax(0, 1fr) var(--reset-col);
+  grid-template-columns: auto minmax(0, 1fr) var(--hit);
 }
 
 .rowLabel {
-  font-size: var(--text-xs);
+  min-height: var(--row-h);
+  display: flex;
+  align-items: center;
+  font-size: var(--text-label);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-muted);
-  padding-top: var(--label-nudge);
   white-space: nowrap;
 }
 
@@ -80,40 +93,45 @@
 }
 
 .resetSlot {
+  min-height: var(--row-h);
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .reset {
+  width: var(--hit);
+  height: var(--hit);
   background: none;
   border: 0;
   border-radius: var(--radius-sm);
   color: var(--color-muted);
   cursor: pointer;
-  font-size: var(--text-sm);
-  line-height: var(--line-normal);
-  padding: var(--space-1) 6px;
+  font-size: var(--text-control);
 }
 
 .reset:hover {
   color: var(--color-accent);
+  background: var(--color-chip);
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) 6px;
+  gap: var(--chip-gap);
   min-width: 0;
 }
 
 .chip {
-  font-size: var(--text-sm);
+  min-height: var(--control-h);
+  font-size: var(--text-control);
   font-weight: var(--weight-medium);
+  white-space: nowrap;
   background: var(--color-chip);
   color: var(--color-ink);
   border: 1px solid transparent;
   border-radius: var(--radius-full);
-  padding: 3px 10px;
+  padding: 0 var(--control-pad);
   cursor: pointer;
 }
 
@@ -135,36 +153,37 @@
 }
 
 .input {
-  font-size: var(--text-md);
+  min-height: var(--input-h);
+  font-size: var(--text-input);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
-  padding: var(--space-1) 10px;
+  padding: 0 var(--space-4);
   max-width: 100%;
 }
 
 .number {
-  width: 64px;
+  width: 92px;
 }
 
 /* Period: the chips, then "or last N games" on the same line when it fits. */
 .inline {
   display: flex;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--chip-gap) var(--space-4);
   align-items: center;
   flex-wrap: wrap;
 }
 
 .lastN {
   display: flex;
-  gap: 6px;
+  gap: var(--space-2);
   align-items: center;
 }
 
 .hint {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-muted);
 }
 
@@ -184,14 +203,14 @@
   width: 100%;
 }
 
-/* The main box (the first row) is bigger than the filter boxes. */
+/* The main box (the first row) stands out from the filter boxes. */
 .large {
-  font-size: var(--text-lg);
-  padding: 6px var(--space-3);
+  font-weight: var(--weight-semibold);
+  border-color: var(--color-muted);
 }
 
 .player .hint {
-  margin-top: 2px;
+  margin-top: var(--space-1);
 }
 
 .suggestions {
@@ -202,7 +221,7 @@
   top: calc(100% + var(--space-1));
   min-width: var(--popover-min);
   padding: var(--space-1) 0;
-  max-height: 300px;
+  max-height: 420px;
   overflow: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-line);
@@ -219,11 +238,12 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-muted);
-  padding: 6px var(--space-3) 2px;
+  padding: var(--space-2) var(--space-4) var(--space-1);
 }
 
 .option {
-  padding: 6px var(--space-3);
+  font-size: var(--text-control);
+  padding: 10px var(--space-4);
   cursor: pointer;
   overflow-wrap: anywhere;
 }
@@ -240,19 +260,19 @@
 }
 
 .emptyOption {
-  padding: 6px var(--space-3);
+  padding: var(--space-3) var(--space-4);
   color: var(--color-muted);
 }
 
 /* ---- Team combobox: the player list styles plus a ▾ button ---- */
 .team {
-  max-width: 280px;
+  max-width: 340px;
 }
 
 .teamInput {
   composes: input;
   width: 100%;
-  padding-right: 34px;
+  padding-right: var(--hit);
 }
 
 .toggle {
@@ -260,11 +280,11 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 32px;
+  width: var(--hit);
   border: 0;
   background: none;
   color: var(--color-muted);
-  font-size: var(--text-base);
+  font-size: var(--text-control);
   cursor: pointer;
 }
 
@@ -280,13 +300,13 @@
 
   .field,
   .row > .field + .field {
-    grid-template-columns: minmax(0, 1fr) var(--reset-col);
-    gap: var(--space-1);
+    grid-template-columns: minmax(0, 1fr) var(--hit);
+    gap: 0 var(--space-1);
   }
 
   .rowLabel {
     grid-column: 1 / -1;
-    padding-top: 0;
+    min-height: 0;
   }
 
   .suggestions {
