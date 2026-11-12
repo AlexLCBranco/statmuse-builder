@@ -1,0 +1,29 @@
+# On every push and pull request: the version-bump check, then the same
+# `npm run check` that runs locally (lint + typecheck + unit + e2e).
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2 # check-version compares HEAD with its parent
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check-version
+        if: github.event_name == 'push'
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check

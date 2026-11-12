@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { expect, test, type Page } from '@playwright/test'
 
 const ASK = 'https://www.statmuse.com/nba/ask/'
@@ -697,3 +699,36 @@ test('suggests 2026-27 rookies from the synced roster list', async ({ page }) =>
   await playerBox(page).fill('cooper fl')
   await expect(playerList(page).getByRole('option')).toHaveText(['Cooper Flagg'])
 })
+
+test('shows its version in the bottom-right corner and serves /version.json', async ({ page, request }) => {
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }
+  const badge = page.getByTestId('site-version')
+  await expect(badge).toHaveText(`v${version}`)
+  // Commit and build time are in the tooltip.
+  const title = (await badge.getAttribute('title')) ?? ''
+  expect(title.startsWith(`Version ${version} · commit `)).toBe(true)
+  expect(title).toMatch(/ · commit [0-9a-f]{7}\+?, built /)
+
+  // In the corner of the window, on top of nothing.
+  const box = (await badge.boundingBox())!
+  const viewport = page.viewportSize()!
+  expect(viewport.width - (box.x + box.width)).toBeLessThan(24)
+  expect(viewport.height - (box.y + box.height)).toBeLessThan(24)
+  const covered = await badge.evaluate((el) => {
+    const r = el.getBoundingClientRect()
+    return document
+      .elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      .filter((other) => other !== el && !other.contains(el)).length
+  })
+  expect(covered).toBe(0)
+
+  const response = await request.get('/version.json')
+  expect(response.ok()).toBe(true)
+  const build = (await response.json()) as { version: string; commit: string; builtAt: string }
+  expect(build.version).toBe(version)
+  expect(build.commit).toMatch(/^[0-9a-f]{7}\+?$/)
+  expect(Number.isNaN(Date.parse(build.builtAt))).toBe(false)
+  // The live site must not cache it (vercel.json); the local preview server sets no such header.
+  if (process.env.BASE_URL) expect(response.headers()['cache-control']).toContain('no-cache')
+})
+

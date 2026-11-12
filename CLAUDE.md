@@ -15,7 +15,9 @@ learning frontend: keep code clean and explain decisions briefly.
 - **localStorage** only through `lib/storage.ts` (never throws).
 - `reference/statmuse-builder.html` is the original single-file build. Don't
   edit it; it's there to compare behaviour and look.
-- Bump `package.json`'s version with every user-visible change, and update
+- Bump `package.json`'s version with every app change (patch for fixes,
+  minor for features); CI fails the push otherwise
+  (`scripts/check-version.mjs`). The page shows it bottom-right. Update
   `PROJECT.md` (incl. "Last updated") at the end of every session.
 
 ## Workflow
@@ -25,8 +27,9 @@ learning frontend: keep code clean and explain decisions briefly.
 3. `npm run check` (lint + typecheck + unit + e2e) must pass before every
    commit.
 4. Commit on `main`, push. Vercel deploys every push to `main`.
-5. After the deploy, `npm run e2e:prod` runs the e2e suite against the live
-   site.
+5. `npm run wait-live` waits until the live `/version.json` shows the new
+   version; tell the owner that number. Then `npm run e2e:prod` runs the e2e
+   suite against the live site.
 
 ## Git and deploy
 
@@ -52,5 +55,6 @@ step at a time.
 ```bash
 npm run dev       # dev server on :5190
 npm run check     # lint + typecheck + unit + e2e (run before every commit)
+npm run wait-live # wait for the live site to serve this version
 npm run e2e:prod  # e2e against https://statmuse-builder.vercel.app
 ```

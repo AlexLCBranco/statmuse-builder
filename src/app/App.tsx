@@ -6,6 +6,7 @@ import { Filters } from '../features/filters/Filters'
 import { QuestionCard } from '../features/question/QuestionCard'
 import { RecentList } from '../features/recent/RecentList'
 import { useSaved } from '../features/recent/useSaved'
+import { SiteVersion } from '../features/version/SiteVersion'
 import styles from './App.module.css'
 
 /**
@@ -69,6 +70,7 @@ export function App() {
         </main>
         <RecentList saved={saved} onEdit={edit} onRemove={removeRecent} onPin={pin} onUnpin={unpin} />
       </div>
+      <SiteVersion />
     </div>
   )
 }
