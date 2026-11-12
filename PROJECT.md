@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-12, v0.12.0_
+_Last updated: 2026-11-12, v0.13.0_
 
 ## What it is
 
@@ -49,7 +49,12 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.12.0)
+## What works now (v0.13.0)
+
+- **Pressed buttons are orange, not white** (v0.13.0): a pressed chip or
+  switch has a dark orange tint, an accent-orange edge and light orange text
+  (`--color-selected`, `--color-selected-ink`, `--color-selected-line`). A
+  pressed "Any" / "Full game" has the edge and text but no tint
 
 - **Three kinds of question**, picked with two switches above the first row:
   - Player / Averages: "LeBron James points in wins last 10 games"
@@ -132,7 +137,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Dark theme only (the opt-in light theme was removed in v0.7.0)
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
-- Tests: 178 unit tests (domain + the version check), 45 Playwright e2e tests. `npm run check`
+- Tests: 178 unit tests (domain + the version check), 46 Playwright e2e tests. `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
 

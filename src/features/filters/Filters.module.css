@@ -36,9 +36,12 @@
   color: var(--color-ink);
 }
 
+/* The segments have no border of their own (the group draws one), so the
+   pressed one gets its accent edge from an inset shadow: no size change. */
 .switchOption[aria-pressed="true"] {
-  background: var(--color-ink);
-  color: var(--color-bg);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  box-shadow: inset 0 0 0 1px var(--color-selected-line);
 }
 
 .switchOption:focus-visible {
@@ -142,16 +145,15 @@
 }
 
 .chip[aria-pressed="true"] {
-  background: var(--color-ink);
-  color: var(--color-bg);
+  background: var(--color-selected);
+  border-color: var(--color-selected-line);
+  color: var(--color-selected-ink);
 }
 
-/* "Any" / "Full game" when on: outlined, so "no filter" reads differently
-   from a real filter. */
+/* "Any" / "Full game" when on: outlined only (no tint), so "no filter" reads
+   differently from a real filter. */
 .anyChip[aria-pressed="true"] {
   background: transparent;
-  border-color: var(--color-ink);
-  color: var(--color-ink);
 }
 
 .input {

@@ -15,6 +15,11 @@
   --color-accent: #f07a3e;
   --color-accent-ink: #14100c;
   --color-chip: #242833;
+  /* A pressed chip or switch: a dark orange tint, lit by an accent border
+     and lighter orange text. */
+  --color-selected: #3a2518;
+  --color-selected-ink: #ffb48a;
+  --color-selected-line: var(--color-accent);
   --color-focus: #7aa7ff;
   --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
   color-scheme: dark;

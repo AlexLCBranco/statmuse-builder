@@ -1005,6 +1005,28 @@ test('is dark, even when the system prefers light', async ({ page }) => {
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(18, 20, 26)')
 })
 
+test('a pressed chip or switch is an orange tint with an accent edge, not white', async ({ page }) => {
+  const look = (el: Locator) =>
+    el.evaluate((node) => {
+      const style = getComputedStyle(node)
+      return { background: style.backgroundColor, color: style.color, border: style.borderTopColor, shadow: style.boxShadow }
+    })
+  const TINT = 'rgb(58, 37, 24)'
+  const INK = 'rgb(255, 180, 138)'
+  const ACCENT = 'rgb(240, 122, 62)'
+
+  await chip(page, 'Stat', 'Points').click()
+  expect(await look(chip(page, 'Stat', 'Points'))).toMatchObject({ background: TINT, color: INK, border: ACCENT })
+  // An unpressed chip keeps the plain chip look.
+  expect(await look(chip(page, 'Stat', 'Rebounds'))).toMatchObject({ background: 'rgb(36, 40, 51)', color: 'rgb(236, 234, 228)' })
+  // "Any" when on: the same edge and text, but no fill.
+  expect(await look(chip(page, 'Court', 'Any'))).toMatchObject({ background: 'rgba(0, 0, 0, 0)', color: INK, border: ACCENT })
+
+  const player = await look(chip(page, 'Mode', 'Player'))
+  expect(player).toMatchObject({ background: TINT, color: INK })
+  expect(player.shadow).toContain(ACCENT)
+})
+
 test('suggests 2026-27 rookies from the synced roster list', async ({ page }) => {
   await expect(page.getByText('Suggestions cover the 2026-27 rosters')).toBeVisible()
   await playerBox(page).fill('cooper fl')
