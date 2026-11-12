@@ -6,9 +6,19 @@
   box-sizing: border-box;
 }
 
+/* The page itself never scrolls: the app is exactly as tall as the window,
+   and its columns scroll inside themselves (see App.module.css). */
 html,
 body {
   margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Slim scrollbars that match the dark theme, wherever something scrolls. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
 }
 
 body {

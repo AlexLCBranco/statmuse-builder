@@ -1,8 +1,11 @@
-/* The page uses the whole window: the builder (question on top, filter rows
-   under it) takes the left, Recent is a fixed column on the right. Narrower
-   windows: one column, Recent at the bottom. */
+/* The page is exactly the window: it never scrolls. The builder (question on
+   top, filter rows under it) takes the left and Recent is a fixed column on
+   the right; each scrolls inside itself when it does not fit. Narrower
+   windows: one column, Recent under the builder, scrolling together. */
 .page {
-  padding-block: var(--space-4) var(--space-7);
+  height: 100dvh;
+  /* The bottom padding is where the version label sits. */
+  padding-block: var(--space-4) var(--space-6);
   /* Keep clear of phone notches in landscape. */
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
   padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
@@ -11,16 +14,34 @@
   gap: var(--space-3);
 }
 
+/* Takes the height left under the header. One column: this is what scrolls. */
 .layout {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
-  align-items: start;
+  align-content: start;
+  overflow-y: auto;
+  /* Room for focus rings, which the scroll box would otherwise cut off. */
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
 }
 
+/* Two columns: each is as tall as the window allows and scrolls by itself. */
 @media (min-width: 1100px) {
   .layout {
     grid-template-columns: minmax(0, 1fr) var(--side-col);
+    grid-template-rows: minmax(0, 1fr);
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+  }
+
+  .main {
+    overflow-y: auto;
+    padding: var(--space-1);
+    margin: calc(-1 * var(--space-1));
   }
 }
 

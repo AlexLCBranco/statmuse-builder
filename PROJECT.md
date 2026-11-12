@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-12, v0.9.0_
+_Last updated: 2026-11-12, v0.10.0_
 
 ## What it is
 
@@ -46,7 +46,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.9.0)
+## What works now (v0.10.0)
 
 - **Three kinds of question**, picked with two switches above the first row:
   - Player / Averages: "LeBron James points in wins last 10 games"
@@ -95,9 +95,15 @@ Layers: `app -> features -> lib -> domain -> styles`
   buttons and text boxes 52px, Recent rows 52px with 44x44 star / ✕ / Edit
   buttons set apart. Sizes are tokens (`--control-h`, `--input-h`, `--hit`).
   At 1920px every chip group is on one line and everything fits one screen.
-  At 1366x768 Stat and Period wrap to two lines and the page scrolls
-  vertically (it no longer fits one screen at that size). Fits a 375px phone
-  with no sideways scroll
+  At 1366x768 Stat and Period wrap to two lines. Fits a 375px phone with no
+  sideways scroll
+- **The page never scrolls** (v0.10.0): the app is exactly the window height
+  (`100dvh`, `overflow: hidden` on html/body). The Recent column fills the
+  height; the "Recent" heading stays put and only its list scrolls (Pinned
+  does the same, up to 45% of the column). A builder that does not fit
+  (1366x768) scrolls inside its own column. In one column (under 1100px,
+  phones) the area under the header scrolls as one. Scrollbars are slim and
+  in the theme's line colour
 - **Version badge**: "v0.8.0" small and muted in the bottom-right corner,
   with the commit and build time in its tooltip; the same three values are
   served at `/version.json` (no-cache on Vercel, via `vercel.json`).
@@ -108,7 +114,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Dark theme only (the opt-in light theme was removed in v0.7.0)
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
-- Tests: 151 unit tests (domain + the version check), 26 Playwright e2e tests. `npm run check`
+- Tests: 151 unit tests (domain + the version check), 31 Playwright e2e tests. `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
 
@@ -199,10 +205,11 @@ This is a sample, not proof that every combination works.
 - "This season" returns last season's numbers until the new season has games.
 - The player list is a snapshot of 2026-27 rosters (incl. two-way players);
   later signings get no suggestions until re-synced (typing still works).
-- At 1366x768 the filter rows no longer fit one screen (Period ends about
-  170px below the fold): the 48px+ targets asked for in v0.9.0 need more
-  height than that window has.
-- The version badge is fixed to the window corner, so on a page long enough
-  to scroll, content passes under it.
+- At 1366x768 the filter rows do not all fit (the 48px+ targets need more
+  height than that window has), so the builder column scrolls there; the
+  last rows are below its fold until you scroll it.
+- A dropdown opened near the bottom of the builder column (Opponent, at
+  1366x768) extends that column's scroll area instead of floating over the
+  page edge.
 - The empty box's recent groups are built from Recent only; a pinned search
   does not appear there.

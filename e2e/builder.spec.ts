@@ -648,7 +648,9 @@ async function expectCleanLayout(page: Page) {
   const problems = await page.evaluate(() => {
     const found: string[] = []
     const doc = document.documentElement
-    if (doc.scrollWidth > doc.clientWidth) found.push(`horizontal scroll: ${doc.scrollWidth} > ${doc.clientWidth}`)
+    for (const box of [doc, ...document.querySelectorAll('main, aside, aside ul, #root > div > div')]) {
+      if (box.scrollWidth > box.clientWidth) found.push(`horizontal scroll in ${box.tagName}: ${box.scrollWidth} > ${box.clientWidth}`)
+    }
     const name = (el: Element) => el.getAttribute('aria-label') || el.textContent?.trim() || el.id || el.tagName
     const controls = [...document.querySelectorAll('button, a, input')].filter((el) => {
       const box = el.getBoundingClientRect()
@@ -693,7 +695,7 @@ test.describe('layout at 1920x1080', () => {
   test.use({ viewport: { width: 1920, height: 1080 } })
 
   test('uses the full width: builder from the left edge, Recent as a 380px column', async ({ page }) => {
-    const builder = (await page.getByRole('main').boundingBox())!
+    const builder = (await page.getByRole('region', { name: 'Your question' }).boundingBox())!
     const side = (await page.getByRole('complementary').boundingBox())!
     expect(builder.x).toBe(24)
     expect(side.width).toBe(380)
@@ -805,7 +807,7 @@ test.describe('layout at 1366x768', () => {
     await seedRecent(page, SEEDED)
     await expectCleanLayout(page)
 
-    const builder = (await page.getByRole('main').boundingBox())!
+    const builder = (await page.getByRole('region', { name: 'Your question' }).boundingBox())!
     const side = (await page.getByRole('complementary').boundingBox())!
     expect(builder.x).toBe(24)
     expect(side.width).toBe(380)
@@ -821,9 +823,156 @@ test.describe('layout at 1366x768', () => {
   })
 })
 
+/** Twelve recents and six pins with long questions: more than a column can show. */
+async function seedLongLists(page: Page) {
+  const entry = (i: number, kind: string): SeedEntry => ({
+    question: `Shai Gilgeous-Alexander points in the 4th quarter on the road in wins last ${i + 1} games ${kind}`,
+    query: { mode: 'player', view: 'averages', player: `Player ${kind} ${i}`, stat: 'points' },
+  })
+  await page.evaluate(
+    ([recentList, pinnedList]) => {
+      localStorage.setItem('smb.recent', JSON.stringify(recentList))
+      localStorage.setItem('smb.pinned', JSON.stringify(pinnedList))
+    },
+    [Array.from({ length: 12 }, (_, i) => entry(i, 'recent')), Array.from({ length: 6 }, (_, i) => entry(i, 'pinned'))],
+  )
+  await page.reload()
+}
+
+/** The page has no scrollbar in either direction, and has not moved. */
+async function expectPageDoesNotScroll(page: Page) {
+  const state = await page.evaluate(() => {
+    const doc = document.documentElement
+    return {
+      htmlOverflow: getComputedStyle(doc).overflow,
+      bodyOverflow: getComputedStyle(document.body).overflow,
+      tallerBy: doc.scrollHeight - window.innerHeight,
+      widerBy: doc.scrollWidth - window.innerWidth,
+      // A page scrollbar would make the layout narrower than the window.
+      scrollbar: window.innerWidth - doc.clientWidth,
+      scrolled: [window.scrollX, window.scrollY, doc.scrollTop, document.body.scrollTop],
+      appHeight: document.querySelector('#root > div')!.getBoundingClientRect().height - window.innerHeight,
+    }
+  })
+  expect(state).toEqual({
+    htmlOverflow: 'hidden',
+    bodyOverflow: 'hidden',
+    tallerBy: 0,
+    widerBy: 0,
+    scrollbar: 0,
+    scrolled: [0, 0, 0, 0],
+    appHeight: 0,
+  })
+}
+
+for (const viewport of [
+  { width: 1920, height: 1080 },
+  { width: 1366, height: 768 },
+]) {
+  test.describe(`no page scroll at ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport })
+
+    test('the page never scrolls; the Recent list scrolls under its pinned heading', async ({ page }) => {
+      await seedLongLists(page)
+      await page.evaluate(() => document.fonts.ready)
+      await expectPageDoesNotScroll(page)
+
+      const list = recent(page)
+      const heading = page.getByRole('heading', { name: 'Recent' })
+      const side = (await page.getByRole('complementary').boundingBox())!
+      // The column fills the height under the header, down to the bottom padding.
+      expect(side.y + side.height).toBeGreaterThan(viewport.height - 40)
+      expect(side.y + side.height).toBeLessThanOrEqual(viewport.height)
+
+      // More rows than fit: the list (and only the list) has a vertical scrollbar.
+      const overflow = await list.evaluate((el) => ({
+        hidden: el.scrollHeight - el.clientHeight,
+        overflowY: getComputedStyle(el).overflowY,
+        scrollbarWidth: getComputedStyle(el).scrollbarWidth,
+        scrollbarColor: getComputedStyle(el).scrollbarColor,
+      }))
+      expect(overflow.hidden).toBeGreaterThan(100)
+      expect(overflow.overflowY).toBe('auto')
+      // Slim, and in the theme's line colour on a clear track.
+      expect(overflow.scrollbarWidth).toBe('thin')
+      expect(overflow.scrollbarColor).toBe('rgb(45, 49, 59) rgba(0, 0, 0, 0)')
+
+      // The mouse wheel over the list scrolls it; the heading stays put.
+      const headingBefore = (await heading.boundingBox())!
+      const firstRowBefore = (await list.getByRole('listitem').first().boundingBox())!
+      const box = (await list.boundingBox())!
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.wheel(0, 300)
+      await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBeGreaterThan(100)
+      expect((await heading.boundingBox())!.y).toBe(headingBefore.y)
+      expect((await list.getByRole('listitem').first().boundingBox())!.y).toBeLessThan(firstRowBefore.y - 100)
+      // The last row can be reached, and its buttons work.
+      await page.mouse.wheel(0, 5000)
+      const lastRow = list.getByRole('listitem').last()
+      await expect(lastRow).toBeInViewport()
+      await lastRow.getByRole('button', { name: 'Edit' }).click()
+      await expect(playerBox(page)).toHaveValue('Player recent 11')
+      await expectPageDoesNotScroll(page)
+
+      // Pinned keeps its own heading in place and scrolls its own list too.
+      const pins = pinned(page)
+      expect(await pins.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0)
+      const pinnedHeading = (await page.getByRole('heading', { name: 'Pinned' }).boundingBox())!
+      const pinsBox = (await pins.boundingBox())!
+      await page.mouse.move(pinsBox.x + pinsBox.width / 2, pinsBox.y + pinsBox.height / 2)
+      await page.mouse.wheel(0, 200)
+      await expect.poll(() => pins.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+      expect((await page.getByRole('heading', { name: 'Pinned' }).boundingBox())!.y).toBe(pinnedHeading.y)
+      await expectPageDoesNotScroll(page)
+    })
+
+    test('a builder that does not fit scrolls inside its own column', async ({ page }) => {
+      await seedLongLists(page)
+      await fillEverything(page)
+      await expectPageDoesNotScroll(page)
+
+      const builder = page.getByRole('main')
+      const hidden = await builder.evaluate((el) => el.scrollHeight - el.clientHeight)
+      const lastRow = page.getByTestId('filter-row').last()
+      if (hidden > 0) {
+        // Short screen: the wheel over the builder scrolls it, not the page or Recent.
+        const box = (await builder.boundingBox())!
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.wheel(0, 2000)
+        await expect.poll(() => builder.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+        expect(await recent(page).evaluate((el) => el.scrollTop)).toBe(0)
+      }
+      await expect(lastRow).toBeInViewport({ ratio: 1 })
+      await expectPageDoesNotScroll(page)
+
+      // Edit from Recent brings the question back into view.
+      await recent(page).getByRole('button', { name: 'Edit' }).first().click()
+      await expect(question(page)).toBeInViewport({ ratio: 1 })
+      await expectPageDoesNotScroll(page)
+    })
+  })
+}
+
+test('phone: the page does not scroll, the single column does', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await seedLongLists(page)
+  await expectPageDoesNotScroll(page)
+  // Everything, down to the last recent row, can be reached.
+  const lastRow = recent(page).getByRole('listitem').last()
+  await lastRow.scrollIntoViewIfNeeded()
+  await expect(lastRow).toBeInViewport()
+  await expectPageDoesNotScroll(page)
+})
+
 test('fits a 375px phone screen without sideways scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
-  const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  const overflow = () =>
+    page.evaluate(() =>
+      Math.max(
+        document.documentElement.scrollWidth - window.innerWidth,
+        ...[...document.querySelectorAll('main, aside, #root > div > div')].map((box) => box.scrollWidth - box.clientWidth),
+      ),
+    )
   await playerBox(page).fill('Shai Gilgeous-Alexander')
   await page.getByRole('combobox', { name: 'Opponent' }).click()
   await page.getByRole('listbox', { name: 'Teams', exact: true }).getByRole('option', { name: 'Trail Blazers' }).click()
@@ -863,8 +1012,7 @@ test('shows its version in the bottom-right corner and serves /version.json', as
   expect(title.startsWith(`Version ${version} · commit `)).toBe(true)
   expect(title).toMatch(/ · commit [0-9a-f]{7}\+?, built /)
 
-  // In the corner of the window; at the end of the page, on top of nothing.
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  // In the corner of the window, in the page's bottom padding: on top of nothing.
   const box = (await badge.boundingBox())!
   const viewport = page.viewportSize()!
   expect(viewport.width - (box.x + box.width)).toBeLessThan(24)

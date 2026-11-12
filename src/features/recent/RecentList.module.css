@@ -1,11 +1,31 @@
+/* The column is as tall as the window allows. Each group keeps its heading
+   in place and scrolls only its list. Pinned takes what it needs, up to
+   under half the column; Recent takes the rest. */
 .recent {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
+  min-height: 0;
+}
+
+.recent > section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.recent > section:not(:last-child) {
+  flex: 0 1 auto;
+  max-height: 45%;
+}
+
+.recent > section:last-child {
+  flex: 1 1 0;
 }
 
 .heading {
+  flex: none;
   font-family: var(--font-display);
   font-weight: var(--weight-heavy);
   font-size: var(--text-heading);
@@ -19,6 +39,11 @@
   margin: 0;
   padding: 0;
   border-top: 1px solid var(--color-line);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Keeps the buttons clear of the scrollbar. */
+  padding-right: var(--space-1);
 }
 
 .item {
@@ -84,4 +109,20 @@
   color: var(--color-muted);
   font-size: var(--text-base);
   padding: var(--space-3) 0;
+}
+
+/* One column (see App.module.css): the whole layout scrolls, so the lists
+   are as long as their content. */
+@media (max-width: 1099.98px) {
+  .recent > section:not(:last-child) {
+    max-height: none;
+  }
+
+  .recent > section:last-child {
+    flex: none;
+  }
+
+  .list {
+    overflow-y: visible;
+  }
 }

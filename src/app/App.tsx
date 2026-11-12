@@ -18,6 +18,7 @@ export function App() {
   const [query, setQuery] = useState<QueryState>(DEFAULT_QUERY)
   const { saved, add, removeRecent, pin, unpin } = useSaved()
   const askRef = useRef<HTMLAnchorElement>(null)
+  const mainRef = useRef<HTMLElement>(null)
 
   const update = (changes: Partial<QueryState>) => setQuery((q) => ({ ...q, ...changes }))
   // The first box: the player, or the team in leaders mode.
@@ -45,7 +46,10 @@ export function App() {
   function edit(savedQuery: QueryState) {
     setQuery(savedQuery)
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+    // The page never scrolls; the builder does (or the whole layout, in one column).
+    for (const scroller of [mainRef.current, mainRef.current?.parentElement]) {
+      scroller?.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+    }
   }
 
   return (
@@ -58,7 +62,7 @@ export function App() {
       </header>
 
       <div className={styles.layout}>
-        <main className={styles.main}>
+        <main ref={mainRef} className={styles.main}>
           <QuestionCard
             query={query}
             askRef={askRef}
