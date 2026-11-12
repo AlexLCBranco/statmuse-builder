@@ -176,26 +176,45 @@ describe('buildQuestion (leaders mode)', () => {
 })
 
 describe('buildQuestion (game by game)', () => {
-  it('replaces the stat with "game log"', () => {
-    expect(buildQuestion(log({ stat: 'points', result: 'in wins', period: 'last 5 games' }))).toBe(
+  it('"All stats" is just "game log"', () => {
+    expect(buildQuestion(log({ result: 'in wins', period: 'last 5 games' }))).toBe(
       'LeBron James game log in wins last 5 games',
     )
+  })
+
+  it('a chosen stat goes before "game log"', () => {
+    expect(buildQuestion(log({ stat: 'points', period: 'last 5 games' }))).toBe(
+      'LeBron James points game log last 5 games',
+    )
+    expect(buildQuestion(log({ stat: 'three pointers made' }))).toBe('LeBron James three pointers made game log')
   })
 
   it.each([
     [{ quarter: 'in the 4th quarter', period: 'last 5 games' }, 'LeBron James game log in the 4th quarter last 5 games'],
     [{ opponent: 'Warriors', period: 'last season' }, 'LeBron James game log vs Warriors last season'],
     [{ lastN: '3' }, 'LeBron James game log last 3 games'],
-  ])('keeps the filters checked on StatMuse %o', (overrides, expected) => {
+    [{ court: 'at home', period: 'last 5 games' }, 'LeBron James game log at home last 5 games'],
+    [{ vsPlayer: 'Stephen Curry' }, 'LeBron James game log vs Stephen Curry'],
+    [{ without: 'Joel Embiid' }, 'LeBron James game log without Joel Embiid'],
+    [{ period: 'this season' }, 'LeBron James game log this season'],
+    [{ period: 'in the playoffs' }, 'LeBron James game log in the playoffs'],
+    [{ period: 'career' }, 'LeBron James game log career'],
+  ])('takes every filter the averages view takes %o', (overrides, expected) => {
     expect(buildQuestion(log(overrides))).toBe(expected)
   })
 
-  it('leaves out the filters and periods not checked for game logs', () => {
-    expect(buildQuestion(log({ court: 'at home', vsPlayer: 'Stephen Curry', without: 'Austin Reaves' }))).toBe(
-      'LeBron James game log',
+  it('stacks the filters in the same order as averages', () => {
+    const all = {
+      stat: 'three pointers made',
+      court: 'at home',
+      opponent: 'Warriors',
+      vsPlayer: 'Stephen Curry',
+      result: 'in wins',
+      period: 'career',
+    }
+    expect(buildQuestion(log(all))).toBe(
+      'LeBron James three pointers made game log at home vs Warriors vs Stephen Curry in wins career',
     )
-    expect(buildQuestion(log({ period: 'career' }))).toBe('LeBron James game log')
-    expect(buildQuestion(log({ period: 'this season' }))).toBe('LeBron James game log')
   })
 
   it('only applies in player mode', () => {

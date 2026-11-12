@@ -57,9 +57,10 @@ describe('what each mode offers', () => {
     expect(offersLastN(league)).toBe(false)
   })
 
-  it('game by game: only the filters and periods checked on StatMuse', () => {
-    expect(offered(gameLog)).toEqual(['quarter', 'opponent', 'result', 'period'])
-    expect(labels(periodOptions(gameLog))).toEqual(['Any', 'Last 5', 'Last 10', 'Last 20', 'Last season'])
+  it('game by game: the same as player averages', () => {
+    expect(offered(gameLog)).toEqual(offered(player))
+    expect(statOptions(gameLog)).toEqual(statOptions(player))
+    expect(periodOptions(gameLog)).toEqual(periodOptions(player))
     expect(offersLastN(gameLog)).toBe(true)
   })
 

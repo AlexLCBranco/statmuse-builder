@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-12, v0.11.0_
+_Last updated: 2026-11-12, v0.12.0_
 
 ## What it is
 
@@ -49,13 +49,14 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.11.0)
+## What works now (v0.12.0)
 
 - **Three kinds of question**, picked with two switches above the first row:
   - Player / Averages: "LeBron James points in wins last 10 games"
   - Player / Game by game: "LeBron James game log in wins last 5 games" (one
-    row per game on StatMuse). No Stat row; only Quarter, Opponent, Result and
-    Period (Last 5/10/20, Last season, last N) are offered
+    row per game on StatMuse). Offers exactly what Averages offers (v0.12.0):
+    every stat, filter and period. "All stats" is a plain "game log"; one
+    stat goes in front ("LeBron James points game log last 5 games")
   - Team leaders: "Celtics points leaders in the 4th quarter in wins last 10
     games" (a ranked list). The first row is a team box, with "League (NBA)"
     first for league-wide leaders. No "All stats", Turnovers, Vs player or
@@ -91,7 +92,7 @@ Layers: `app -> features -> lib -> domain -> styles`
   career) + custom "last N games" (1–82, wins over the chips)
 - Opponent box: a dropdown you can type into (nickname or city); only a real
   team is kept
-- Vs player and Without boxes (player mode, averages)
+- Vs player and Without boxes (player mode, both views)
 - **Clear**: "Clear all" empties the boxes, puts the filter rows back to the
   saved defaults (factory ones when none are saved), keeps the current mode
   and view, and focuses the first box; each filter has a small ✕ that shows
@@ -131,7 +132,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Dark theme only (the opt-in light theme was removed in v0.7.0)
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
-- Tests: 171 unit tests (domain + the version check), 45 Playwright e2e tests. `npm run check`
+- Tests: 178 unit tests (domain + the version check), 45 Playwright e2e tests. `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
 
@@ -174,8 +175,24 @@ and every filter it applied.
 | NBA points leaders in the 4th quarter at home vs Lakers in wins this season | answered, all filters (sentence only) |
 | NBA points leaders in the 4th quarter in wins last 10 games | **misread**: each player's own last 10 games, all-time (answer: Kobe Bryant). "Last N games" is hidden for League |
 
-Not checked, so not offered: game log with Court, Vs player, Without, This
-season, Playoffs or Career.
+### Checked 2026-11-12 (game log, the rest of the averages options)
+
+All sentence only (the sign-up prompt hid the per-game rows from the first
+page), so each row shows StatMuse understood the stat and filters, not that
+the table lists one row per game.
+
+| Question | Result |
+|---|---|
+| LeBron James game log at home last 5 games | answered: latest home game |
+| LeBron James game log on the road last season | answered: a 2025-26 road game |
+| LeBron James points game log last 5 games | answered: points only |
+| LeBron James minutes game log in the 4th quarter last 5 games | answered: 4th-quarter minutes |
+| LeBron James game log this season | answered |
+| LeBron James game log in the playoffs | answered: a 2026 playoff game |
+| LeBron James game log career | answered |
+| LeBron James game log vs Stephen Curry | answered ("versus Stephen Curry") |
+| LeBron James game log without Joel Embiid | answered ("without Joel Embiid") |
+| LeBron James three pointers made game log at home vs Warriors vs Stephen Curry in wins career | answered, every filter echoed back |
 
 ### Checked 2026-10-17 (player questions)
 
@@ -203,9 +220,8 @@ This is a sample, not proof that every combination works.
 ## Next steps
 
 - Re-check the "sentence only" rows with a signed-in StatMuse account (or
-  after the free-view limit resets), above all the two game log rows
-- Check more game log filters (Court, This season, Playoffs, Career) and
-  offer the ones that pass (`GAME_LOG_PERIODS` / `HIDDEN_IN_GAME_LOG`)
+  after the free-view limit resets), above all the game log rows: confirm
+  each one really lists one row per game
 - Re-run `npm run sync:players` after trades/signings (it is a snapshot)
 
 ## Open problems

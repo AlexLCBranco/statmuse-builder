@@ -339,34 +339,42 @@ test('league leaders: "NBA ... leaders", without "last N games"', async ({ page 
   await expect(askLink(page)).toHaveAttribute('href', `${ASK}nba-assists-leaders-this-season`)
 })
 
-test('game by game view: the stat becomes "game log"', async ({ page }) => {
+test('game by game view: "game log", with every option averages has', async ({ page }) => {
   await playerBox(page).fill('LeBron James')
   await chip(page, 'Stat', 'Points').click()
   await chip(page, 'Court', 'Home').click()
   await chip(page, 'Result', 'Wins').click()
   await chip(page, 'Period', 'Last 5').click()
 
+  // The same rows and chips in both views.
+  const statChips = await group(page, 'Stat').getByRole('button').allTextContents()
+  const periodChips = await group(page, 'Period').getByRole('button').allTextContents()
   await chip(page, 'View', 'Game by game').click()
-  // No Stat row, and only the filters checked on StatMuse for game logs.
-  await expect(group(page, 'Stat')).toHaveCount(0)
-  await expect(group(page, 'Court')).toHaveCount(0)
-  await expect(page.getByRole('combobox', { name: 'Vs player' })).toHaveCount(0)
-  await expect(page.getByRole('combobox', { name: 'Without' })).toHaveCount(0)
-  await expect(group(page, 'Period').getByRole('button')).toHaveText(['Any', 'Last 5', 'Last 10', 'Last 20', 'Last season'])
+  await expect(group(page, 'Stat').getByRole('button')).toHaveText(statChips)
+  await expect(group(page, 'Period').getByRole('button')).toHaveText(periodChips)
+  await expect(group(page, 'Court')).toHaveCount(1)
+  await expect(page.getByRole('combobox', { name: 'Vs player' })).toHaveCount(1)
+  await expect(page.getByRole('combobox', { name: 'Without' })).toHaveCount(1)
 
+  await expect(question(page)).toHaveText('LeBron James points game log at home in wins last 5 games')
+  await expect(askLink(page)).toHaveAttribute('href', `${ASK}lebron-james-points-game-log-at-home-in-wins-last-5-games`)
+
+  // "All stats" is a plain game log.
+  await resetButton(page, 'Stat').click()
+  await resetButton(page, 'Court').click()
   await expect(question(page)).toHaveText('LeBron James game log in wins last 5 games')
-  await expect(askLink(page)).toHaveAttribute('href', `${ASK}lebron-james-game-log-in-wins-last-5-games`)
 
   await resetButton(page, 'Result').click()
   await chip(page, 'Quarter', 'Q4').click()
-  await expect(question(page)).toHaveText('LeBron James game log in the 4th quarter last 5 games')
+  await chip(page, 'Period', 'Career').click()
+  await expect(question(page)).toHaveText('LeBron James game log in the 4th quarter career')
 
-  expect(await ask(page)).toBe(`${ASK}lebron-james-game-log-in-the-4th-quarter-last-5-games`)
-  await expect(recent(page).getByRole('link')).toHaveText(['LeBron James game log in the 4th quarter last 5 games'])
+  expect(await ask(page)).toBe(`${ASK}lebron-james-game-log-in-the-4th-quarter-career`)
+  await expect(recent(page).getByRole('link')).toHaveText(['LeBron James game log in the 4th quarter career'])
 
-  // Back to averages: the stat and the hidden court filter return.
+  // Back to averages: the same filters, as an average.
   await chip(page, 'View', 'Averages').click()
-  await expect(question(page)).toHaveText('LeBron James points in the 4th quarter at home last 5 games')
+  await expect(question(page)).toHaveText('LeBron James stats in the 4th quarter career')
 
   // The view switch is hidden in leaders mode.
   await chip(page, 'Mode', 'Team leaders').click()

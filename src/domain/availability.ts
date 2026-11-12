@@ -22,13 +22,10 @@ export const isLeague = (query: Context): boolean => isLeaders(query) && query.t
 
 /** Leaders questions have no single player to match up or sit out. */
 const HIDDEN_IN_LEADERS: readonly FilterKey[] = ['vsPlayer', 'without']
-/** Not checked on StatMuse for game logs, so not offered there. */
-const HIDDEN_IN_GAME_LOG: readonly FilterKey[] = ['stat', 'court', 'vsPlayer', 'without']
 
+/** Player questions (averages and game by game alike) take every filter. */
 export function offersFilter(query: Context, key: FilterKey): boolean {
-  if (isLeaders(query)) return !HIDDEN_IN_LEADERS.includes(key)
-  if (isGameLog(query)) return !HIDDEN_IN_GAME_LOG.includes(key)
-  return true
+  return isLeaders(query) ? !HIDDEN_IN_LEADERS.includes(key) : true
 }
 
 /**
@@ -41,12 +38,9 @@ export function statOptions(query: Context): readonly Option[] {
   return isLeaders(query) ? STAT_OPTIONS.filter((o) => !NOT_LEADER_STATS.includes(o.value)) : STAT_OPTIONS
 }
 
-/** The only periods checked on StatMuse for game logs. */
-const GAME_LOG_PERIODS: readonly string[] = ['', 'last 5 games', 'last 10 games', 'last 20 games', 'last season']
 const LAST_GAMES = /^last \d+ games$/
 
 export function periodOptions(query: Context): readonly Option[] {
-  if (isGameLog(query)) return PERIOD_OPTIONS.filter((o) => GAME_LOG_PERIODS.includes(o.value))
   // League-wide, StatMuse reads "last 10 games" as each player's own last
   // 10 games, all-time (the answer was Kobe Bryant), so it is not offered.
   if (isLeague(query)) return PERIOD_OPTIONS.filter((o) => !LAST_GAMES.test(o.value))

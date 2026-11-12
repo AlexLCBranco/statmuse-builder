@@ -113,19 +113,27 @@ export interface QuestionPart {
 }
 
 /**
+ * The stat part of the question. Game by game: "game log" for "All stats",
+ * "points game log" for one stat. Leaders: "points leaders".
+ */
+function statWords(query: QueryState, stat: string): string {
+  if (isLeaders(query)) return `${stat} leaders`
+  if (isGameLog(query)) return stat === defaultStat(query) ? 'game log' : `${stat} game log`
+  return stat
+}
+
+/**
  * The question in order: subject, stat, quarter, court, opponent team,
  * opponent player, without, result, period. StatMuse reads both "vs" parts
- * together ("vs Warriors vs Stephen Curry"). The stat part is "game log" in
- * game by game view and "<stat> leaders" in leaders mode. Empty and hidden
+ * together ("vs Warriors vs Stephen Curry"). Empty and hidden
  * filters are left out; the subject part is always first, even when empty, so
  * the UI can show a placeholder in its place.
  */
 export function questionParts(query: QueryState): QuestionPart[] {
   const stat = effectiveStat(query)
-  const statPart = isGameLog(query) ? 'game log' : isLeaders(query) ? `${stat} leaders` : stat
   return [
     { text: subject(query), isSubject: true },
-    { text: statPart, isSubject: false },
+    { text: statWords(query, stat), isSubject: false },
     ...filterWords(query).map(([, text]) => ({ text, isSubject: false })),
   ]
 }
