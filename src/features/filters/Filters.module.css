@@ -1,15 +1,69 @@
 .controls {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-row);
 }
 
-/* Label column + control column; stacks on phones (see bottom). */
+/* ---- Mode / view switches: segmented controls above the first row ---- */
+.switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.switch {
+  display: inline-flex;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.switchOption {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  background: transparent;
+  color: var(--color-muted);
+  border: 0;
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+}
+
+.switchOption:hover {
+  color: var(--color-ink);
+}
+
+.switchOption[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+.switchOption:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---- Rows ---- */
+/* A row holds one filter, or two short ones side by side. */
 .row {
+  display: flex;
+  gap: var(--space-2) var(--space-5);
+  min-width: 0;
+}
+
+/* One filter: label column, control, and a slot for its reset button.
+   The slot is always there, so the ✕ appearing never moves anything. */
+.field {
+  flex: 1 1 0;
   display: grid;
-  grid-template-columns: var(--label-col) minmax(0, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: var(--label-col) minmax(0, 1fr) var(--reset-col);
+  gap: var(--space-2);
   align-items: start;
+  min-width: 0;
+}
+
+/* The second filter of a pair sits right after the first; its label only
+   needs to be as wide as its text. */
+.row > .field + .field {
+  grid-template-columns: auto minmax(0, 1fr) var(--reset-col);
 }
 
 .rowLabel {
@@ -17,31 +71,49 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-muted);
-  padding-top: 9px;
+  padding-top: var(--label-nudge);
+  white-space: nowrap;
 }
 
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+.control {
   min-width: 0;
+}
+
+.resetSlot {
+  display: flex;
+  justify-content: center;
+}
+
+.reset {
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  line-height: var(--line-normal);
+  padding: var(--space-1) 6px;
+}
+
+.reset:hover {
+  color: var(--color-accent);
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-1) 6px;
   min-width: 0;
 }
 
 .chip {
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   background: var(--color-chip);
   color: var(--color-ink);
   border: 1px solid transparent;
   border-radius: var(--radius-full);
-  padding: 6px var(--space-3);
+  padding: 3px 10px;
   cursor: pointer;
 }
 
@@ -62,26 +134,33 @@
   color: var(--color-ink);
 }
 
-.field {
-  font-size: var(--text-base);
+.input {
+  font-size: var(--text-md);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
-  padding: var(--space-2) 10px;
+  padding: var(--space-1) 10px;
   max-width: 100%;
 }
 
 .number {
-  width: 72px;
+  width: 64px;
 }
 
+/* Period: the chips, then "or last N games" on the same line when it fits. */
 .inline {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-3);
   align-items: center;
   flex-wrap: wrap;
+}
+
+.lastN {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .hint {
@@ -101,14 +180,18 @@
 }
 
 .playerInput {
-  composes: field;
+  composes: input;
   width: 100%;
+}
+
+/* The main box (the first row) is bigger than the filter boxes. */
+.large {
   font-size: var(--text-lg);
-  padding: 10px var(--space-3);
+  padding: 6px var(--space-3);
 }
 
 .player .hint {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .suggestions {
@@ -117,10 +200,9 @@
   left: 0;
   right: 0;
   top: calc(100% + var(--space-1));
-  margin: 0;
+  min-width: var(--popover-min);
   padding: var(--space-1) 0;
-  list-style: none;
-  max-height: 260px;
+  max-height: 300px;
   overflow: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-line);
@@ -132,29 +214,43 @@
   display: none;
 }
 
-.suggestions li {
-  padding: 7px var(--space-3);
-  cursor: pointer;
+.groupLabel {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding: 6px var(--space-3) 2px;
 }
 
-.suggestions li[aria-selected="true"],
-.suggestions li:hover {
+.option {
+  padding: 6px var(--space-3);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.option[aria-selected="true"],
+.option:hover {
   background: var(--color-chip);
 }
 
-.suggestions mark {
+.option mark {
   background: none;
   color: var(--color-accent);
   font-weight: var(--weight-semibold);
 }
 
-/* ---- Opponent combobox: the player list styles plus a ▾ button ---- */
+.emptyOption {
+  padding: 6px var(--space-3);
+  color: var(--color-muted);
+}
+
+/* ---- Team combobox: the player list styles plus a ▾ button ---- */
 .team {
-  max-width: 260px;
+  max-width: 280px;
 }
 
 .teamInput {
-  composes: field;
+  composes: input;
   width: 100%;
   padding-right: 34px;
 }
@@ -176,22 +272,24 @@
   color: var(--color-ink);
 }
 
-.suggestions li.empty {
-  color: var(--color-muted);
-  cursor: default;
-}
-
-.suggestions li.empty:hover {
-  background: none;
-}
-
-@media (max-width: 520px) {
+/* Phones: pairs stack, and each label sits above its control. */
+@media (max-width: 640px) {
   .row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 6px;
+    flex-direction: column;
+  }
+
+  .field,
+  .row > .field + .field {
+    grid-template-columns: minmax(0, 1fr) var(--reset-col);
+    gap: var(--space-1);
   }
 
   .rowLabel {
+    grid-column: 1 / -1;
     padding-top: 0;
+  }
+
+  .suggestions {
+    min-width: 0;
   }
 }

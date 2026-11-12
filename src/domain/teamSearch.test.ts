@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { TEAMS } from './options'
-import { exactTeam, findTeams, TEAM_CITIES } from './teamSearch'
+import { LEAGUE_OPTION, TEAMS } from './options'
+import { exactTeam, findTeams, isExactOption, optionMatches, TEAM_CITIES } from './teamSearch'
 
 describe('findTeams', () => {
   it('returns every team for empty input', () => {
@@ -46,5 +46,22 @@ describe('exactTeam', () => {
     expect(exactTeam('jaz')).toBeNull()
     expect(exactTeam('Utah')).toBeNull()
     expect(exactTeam('')).toBeNull()
+  })
+})
+
+describe('the League (NBA) entry', () => {
+  it('matches the start of any word of its label', () => {
+    expect(optionMatches(LEAGUE_OPTION, 'lea')).toBe(true)
+    expect(optionMatches(LEAGUE_OPTION, 'NBA')).toBe(true)
+    expect(optionMatches(LEAGUE_OPTION, 'ague')).toBe(false)
+    expect(optionMatches(LEAGUE_OPTION, 'lakers')).toBe(false)
+    expect(optionMatches(LEAGUE_OPTION, '')).toBe(false)
+  })
+
+  it('is exact by label or by value, any case', () => {
+    expect(isExactOption(LEAGUE_OPTION, 'nba')).toBe(true)
+    expect(isExactOption(LEAGUE_OPTION, 'League (NBA)')).toBe(true)
+    expect(isExactOption(LEAGUE_OPTION, 'league')).toBe(false)
+    expect(isExactOption(LEAGUE_OPTION, '')).toBe(false)
   })
 })

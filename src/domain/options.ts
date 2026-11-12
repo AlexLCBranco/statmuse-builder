@@ -2,7 +2,8 @@
  * The choices offered by each chip group. Each option pairs the exact words
  * that go into the StatMuse question (`value`) with the short chip text
  * (`label`). An empty `value` means "no filter" and adds nothing to the
- * question.
+ * question. Which of these a mode actually offers is decided in
+ * `availability.ts`.
  */
 export interface Option {
   readonly value: string
@@ -18,6 +19,10 @@ export const STAT_OPTIONS: readonly Option[] = [
   { value: 'field goals made', label: 'FGM' },
   { value: 'three pointers attempted', label: '3PA' },
   { value: 'three pointers made', label: '3PM' },
+  { value: 'steals', label: 'Steals' },
+  { value: 'blocks', label: 'Blocks' },
+  { value: 'turnovers', label: 'Turnovers' },
+  { value: 'minutes', label: 'Minutes' },
 ]
 
 export const QUARTER_OPTIONS: readonly Option[] = [
@@ -53,6 +58,16 @@ export const RESULT_OPTIONS: readonly Option[] = [
   { value: 'in losses', label: 'Losses' },
 ]
 
+export const MODE_OPTIONS: readonly Option[] = [
+  { value: 'player', label: 'Player' },
+  { value: 'leaders', label: 'Team leaders' },
+]
+
+export const VIEW_OPTIONS: readonly Option[] = [
+  { value: 'averages', label: 'Averages' },
+  { value: 'gamelog', label: 'Game by game' },
+]
+
 /** Team nicknames as StatMuse understands them ("vs Lakers"), A to Z. */
 export const TEAMS: readonly string[] = [
   '76ers', 'Bucks', 'Bulls', 'Cavaliers', 'Celtics', 'Clippers', 'Grizzlies',
@@ -61,6 +76,10 @@ export const TEAMS: readonly string[] = [
   'Rockets', 'Spurs', 'Suns', 'Thunder', 'Timberwolves', 'Trail Blazers',
   'Warriors', 'Wizards',
 ]
+
+/** The "team" for league-wide leaders: "NBA assists leaders this season". */
+export const LEAGUE = 'NBA'
+export const LEAGUE_OPTION: Option = { value: LEAGUE, label: 'League (NBA)' }
 
 /** The most games "last N games" accepts: one regular season. */
 export const MAX_LAST_N = 82

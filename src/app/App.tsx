@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { buildQuestion, CLEARED_QUERY, DEFAULT_QUERY, type QueryState } from '../domain/query'
+import { isLeaders } from '../domain/availability'
+import { buildQuestion, clearAll, DEFAULT_QUERY, type QueryState } from '../domain/query'
 import { Filters } from '../features/filters/Filters'
 import { QuestionCard } from '../features/question/QuestionCard'
 import { RecentList } from '../features/recent/RecentList'
-import { useRecent } from '../features/recent/useRecent'
+import { useSaved } from '../features/recent/useSaved'
 import styles from './App.module.css'
 
 /**
@@ -14,19 +15,34 @@ import styles from './App.module.css'
  */
 export function App() {
   const [query, setQuery] = useState<QueryState>(DEFAULT_QUERY)
-  const { recent, add, remove } = useRecent()
+  const { saved, add, removeRecent, pin, unpin } = useSaved()
   const askRef = useRef<HTMLAnchorElement>(null)
 
   const update = (changes: Partial<QueryState>) => setQuery((q) => ({ ...q, ...changes }))
-  const focusPlayer = () => document.getElementById('player')?.focus()
+  // The first box: the player, or the team in leaders mode.
+  const focusFirst = () => document.getElementById(isLeaders(query) ? 'team' : 'player')?.focus()
+  // "Clicks" the Ask link, so every keyboard path opens the tab and saves to
+  // Recent exactly like a click.
+  const ask = () => askRef.current?.click()
+
+  // Ctrl+Enter (Cmd+Enter on Mac) anywhere on the page presses Ask.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return
+      event.preventDefault()
+      askRef.current?.click()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   function clear() {
-    setQuery(CLEARED_QUERY)
-    focusPlayer()
+    setQuery(clearAll(query))
+    focusFirst()
   }
 
-  function edit(saved: QueryState) {
-    setQuery(saved)
+  function edit(savedQuery: QueryState) {
+    setQuery(savedQuery)
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
   }
@@ -40,19 +56,19 @@ export function App() {
         <div className={styles.tag}>NBA · builds the question, StatMuse answers it</div>
       </header>
 
-      <main className={styles.main}>
-        <QuestionCard
-          query={query}
-          askRef={askRef}
-          onAsk={() => add({ question: buildQuestion(query), query })}
-          onMissingPlayer={focusPlayer}
-          onClear={clear}
-        />
-        {/* Enter in the player box "clicks" the Ask link, so the keyboard
-            path opens the tab and saves to Recent exactly like a click. */}
-        <Filters query={query} onChange={update} onSubmit={() => askRef.current?.click()} />
-        <RecentList recent={recent} onEdit={edit} onRemove={remove} />
-      </main>
+      <div className={styles.layout}>
+        <main className={styles.main}>
+          <QuestionCard
+            query={query}
+            askRef={askRef}
+            onAsk={() => add({ question: buildQuestion(query), query })}
+            onMissingSubject={focusFirst}
+            onClear={clear}
+          />
+          <Filters query={query} onChange={update} onReplace={setQuery} onSubmit={ask} recent={saved.recent} />
+        </main>
+        <RecentList saved={saved} onEdit={edit} onRemove={removeRecent} onPin={pin} onUnpin={unpin} />
+      </div>
     </div>
   )
 }

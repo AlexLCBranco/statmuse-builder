@@ -1,4 +1,4 @@
-import { TEAMS } from './options'
+import { TEAMS, type Option } from './options'
 import { matchRank, normalizeName } from './playerSearch'
 
 /** Each team's city, so typing "utah" or "boston" finds the team too. */
@@ -38,4 +38,20 @@ export function findTeams(typed: string, teams: readonly string[] = TEAMS): stri
 export function exactTeam(typed: string, teams: readonly string[] = TEAMS): string | null {
   const search = normalizeName(typed).trim()
   return teams.find((team) => normalizeName(team) === search) ?? null
+}
+
+/**
+ * Whether a special list entry ("League (NBA)") matches what was typed: any
+ * word of its label starting with it ("lea", "nba").
+ */
+export function optionMatches(option: Option, typed: string): boolean {
+  const search = normalizeName(typed).trim().replace(/\s+/g, ' ')
+  const rank = search ? matchRank(option.label, search) : null
+  return rank !== null && rank < 2
+}
+
+/** Whether what was typed is exactly a special entry's label or value (any case). */
+export function isExactOption(option: Option, typed: string): boolean {
+  const search = normalizeName(typed).trim()
+  return search !== '' && [option.label, option.value].some((text) => normalizeName(text).trim() === search)
 }

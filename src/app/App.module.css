@@ -1,28 +1,43 @@
-/* One column: the live question is the hero, the controls are rows of chips
-   under it, recents at the bottom. */
+/* Desktop: the builder (question on top, filter rows under it) with Recent
+   beside it, so everything is on one screen. Narrower: one column, Recent
+   at the bottom. */
 .page {
   max-width: var(--page-max);
   margin: 0 auto;
-  padding-block: var(--space-7) var(--space-8);
+  padding-block: var(--space-4) var(--space-7);
   /* Keep clear of phone notches in landscape. */
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
   padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space-3);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) var(--side-col);
+  }
 }
 
 .main {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-3);
+  gap: var(--space-1) var(--space-3);
   flex-wrap: wrap;
 }
 

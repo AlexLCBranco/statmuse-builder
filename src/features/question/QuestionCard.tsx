@@ -1,26 +1,27 @@
 import { useEffect, useRef, useState, type MouseEvent, type Ref } from 'react'
 
-import { buildQuestion, hasPlayer, questionParts, type QueryState } from '../../domain/query'
+import { isLeaders } from '../../domain/availability'
+import { buildQuestion, isReady, questionParts, tooManyFilters, type QueryState } from '../../domain/query'
 import { statmuseUrl } from '../../domain/slug'
 import { copyText, selectContents } from '../../lib/clipboard'
 import styles from './QuestionCard.module.css'
 
 interface Props {
   query: QueryState
-  /** Lets the page "press" Ask from the keyboard (Enter in the player box). */
+  /** Lets the page "press" Ask from the keyboard (Enter, Ctrl+Enter). */
   askRef: Ref<HTMLAnchorElement>
   /** Called when the question is sent, so it can be saved to Recent. */
   onAsk: () => void
-  /** Called when Ask is pressed without a player. */
-  onMissingPlayer: () => void
+  /** Called when Ask is pressed without a player (or team). */
+  onMissingSubject: () => void
   onClear: () => void
 }
 
 const TOAST_MS = 1800
 
 /** The hero: the question as a sentence, its exact URL, and the actions. */
-export function QuestionCard({ query, askRef, onAsk, onMissingPlayer, onClear }: Props) {
-  const ready = hasPlayer(query)
+export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear }: Props) {
+  const ready = isReady(query)
   const question = buildQuestion(query)
   const url = statmuseUrl(question)
   const urlElement = useRef<HTMLDivElement>(null)
@@ -45,7 +46,7 @@ export function QuestionCard({ query, askRef, onAsk, onMissingPlayer, onClear }:
   function handleAsk(event: MouseEvent<HTMLAnchorElement>) {
     if (!ready) {
       event.preventDefault()
-      onMissingPlayer()
+      onMissingSubject()
       return
     }
     // No preventDefault: the browser follows the link in a new tab as usual.
@@ -61,11 +62,11 @@ export function QuestionCard({ query, askRef, onAsk, onMissingPlayer, onClear }:
         {questionParts(query).map((part, i) => (
           <span key={i}>
             {i > 0 && ' '}
-            {part.isPlayer ? (
+            {part.isSubject ? (
               ready ? (
-                <b className={styles.player}>{part.text}</b>
+                <b className={styles.subject}>{part.text}</b>
               ) : (
-                <span className={styles.placeholder}>Pick a player</span>
+                <span className={styles.placeholder}>{isLeaders(query) ? 'Pick a team' : 'Pick a player'}</span>
               )
             ) : (
               part.text
@@ -76,6 +77,11 @@ export function QuestionCard({ query, askRef, onAsk, onMissingPlayer, onClear }:
       <div ref={urlElement} className={styles.url} data-testid="question-url">
         {ready ? url : 'statmuse.com/nba/ask/…'}
       </div>
+      {tooManyFilters(query) && (
+        <p className={styles.warning} data-testid="filter-warning">
+          StatMuse may not understand this many filters.
+        </p>
+      )}
       <div className={styles.actions}>
         {/* A real link (not window.open) so middle-click, "copy link" and
             screen readers all treat it as the link it is. */}
@@ -86,6 +92,7 @@ export function QuestionCard({ query, askRef, onAsk, onMissingPlayer, onClear }:
           target="_blank"
           rel="noopener noreferrer"
           aria-disabled={!ready}
+          title="Ctrl+Enter (Cmd+Enter on Mac)"
           onClick={handleAsk}
         >
           Ask StatMuse <span aria-hidden="true">↗</span>
@@ -107,7 +114,7 @@ export function QuestionCard({ query, askRef, onAsk, onMissingPlayer, onClear }:
           Copy link
         </button>
         <button type="button" className={styles.button} onClick={onClear}>
-          Clear
+          Clear all
         </button>
         <span className={styles.toast} role="status">
           {toast}
