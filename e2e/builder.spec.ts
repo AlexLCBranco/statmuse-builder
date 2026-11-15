@@ -339,6 +339,66 @@ test('league leaders: "NBA ... leaders", without "last N games"', async ({ page 
   await expect(askLink(page)).toHaveAttribute('href', `${ASK}nba-assists-leaders-this-season`)
 })
 
+const ROTATIONKIT = 'https://rotationkit.vercel.app/'
+const rotations = (page: Page) => page.getByTestId('rotations')
+
+test('rotations button: the same player or team on rotationkit', async ({ page }) => {
+  // Empty box: shown, disabled, no link.
+  await expect(rotations(page)).toHaveText('Rotations ↗')
+  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
+  await expect(rotations(page)).not.toHaveAttribute('href')
+
+  // Player mode: the typed name counts; filters are not carried over.
+  await playerBox(page).fill("De'Aaron Fox")
+  await chip(page, 'Court', 'Home').click()
+  await expect(rotations(page)).toHaveText("De'Aaron Fox rotations ↗")
+  await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/player?name=De'Aaron%20Fox`)
+  await expect(rotations(page)).toHaveAttribute('target', '_blank')
+  await expect(rotations(page)).toHaveAttribute('rel', 'noopener')
+  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'false')
+
+  // Game by game: the same link.
+  await chip(page, 'View', 'Game by game').click()
+  await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/player?name=De'Aaron%20Fox`)
+
+  // Team leaders: disabled until a team is picked, then the team's tricode.
+  await chip(page, 'Mode', 'Team leaders').click()
+  await expect(rotations(page)).toHaveText('Rotations ↗')
+  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
+  await teamBox(page).fill('orlando')
+  await teamBox(page).press('Enter')
+  await expect(rotations(page)).toHaveText('Magic rotations ↗')
+  await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/team/ORL`)
+
+  // League: disabled again.
+  await teamBox(page).fill('nba')
+  await teamBox(page).press('Enter')
+  await expect(teamBox(page)).toHaveValue('League (NBA)')
+  await expect(rotations(page)).toHaveText('Rotations ↗')
+  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
+  await expect(rotations(page)).not.toHaveAttribute('href')
+
+  // Clicking the disabled button opens nothing.
+  let popups = 0
+  page.on('popup', () => popups++)
+  // force: Playwright itself refuses to click an aria-disabled element.
+  await rotations(page).click({ force: true })
+  await page.waitForTimeout(300)
+  expect(popups).toBe(0)
+})
+
+test('rotationkit opens the player page for a current player (live site only)', async ({ browser }) => {
+  // Hits the real rotationkit, so only after a deploy (npm run e2e:prod).
+  test.skip(!process.env.BASE_URL, 'checks the external site; runs in e2e:prod')
+  const page = await browser.newPage()
+  await page.goto(`${ROTATIONKIT}#/player?name=${encodeURIComponent('Anfernee Simons')}`)
+  // rotationkit resolves the name to his team/player-id page.
+  await expect(page).toHaveURL(/#\/player\/[A-Z]{3}\/\d+/, { timeout: 30_000 })
+  await expect(page.getByText('Anfernee Simons').first()).toBeVisible()
+  await expect(page.getByText(/No rotation data/)).toHaveCount(0)
+  await page.close()
+})
+
 test('game by game view: "game log", with every option averages has', async ({ page }) => {
   await playerBox(page).fill('LeBron James')
   await chip(page, 'Stat', 'Points').click()
@@ -727,6 +787,19 @@ test.describe('layout at 1920x1080', () => {
 
     await chip(page, 'Mode', 'Team leaders').click()
     for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period']) expect(await chipLines(page, name), name).toBe(1)
+    await expectCleanLayout(page)
+  })
+
+  test('the action row, Rotations included, fits on one line', async ({ page }) => {
+    await page.evaluate(() => document.fonts.ready)
+    await seedRecent(page, SEEDED)
+    // A long name makes the longest Rotations label.
+    await playerBox(page).fill('Giannis Antetokounmpo')
+    await expect(page.getByTestId('rotations')).toHaveText('Giannis Antetokounmpo rotations ↗')
+    const buttons = page.getByRole('region', { name: 'Your question' }).locator('a, button')
+    const tops = new Set<number>()
+    for (const box of await buttons.all()) tops.add(Math.round((await box.boundingBox())!.y))
+    expect(tops.size).toBe(1)
     await expectCleanLayout(page)
   })
 

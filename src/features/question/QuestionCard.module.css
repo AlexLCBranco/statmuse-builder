@@ -91,6 +91,15 @@
   filter: brightness(1.06);
 }
 
+/* Its label holds a player name, which can be too long for a phone: let it
+   wrap inside the button rather than push the page sideways. On wide screens
+   the row has room and it stays on one line. */
+.rotations {
+  white-space: normal;
+  min-width: 0;
+  padding-block: var(--space-1);
+}
+
 /* aria-disabled (not the disabled attribute) keeps the buttons focusable and
    lets a link look disabled; the click handlers check it too. */
 .button[aria-disabled="true"] {
