@@ -14,7 +14,7 @@ const NO_BUMP = [
   /^reference\//,
   /^\.github\//,
   /^\.claude\//,
-  /^(PROJECT|CLAUDE|README)\.md$/,
+  /^(PROJECT|CLAUDE|README|BUILT|FEATURE_BACKLOG|IDEAS)\.md$/,
   /^\.gitignore$/,
   /^\.gitattributes$/,
   /^\.oxlintrc\.json$/,
@@ -34,6 +34,7 @@ export function isBumped(before, after) {
 
 // Only when run directly (`node scripts/check-version.mjs`), not when imported by its test.
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  execSync('node scripts/check-lists.mjs', { stdio: 'inherit' }); // the owner's lists (CLAUDE.md); throws on failure
   const git = (command) => execSync(`git ${command}`, { encoding: 'utf8' }).trim()
   const files = git('diff --name-only HEAD~1 HEAD').split('\n').filter(Boolean)
   const version = (ref) => JSON.parse(git(`show ${ref}:package.json`)).version
