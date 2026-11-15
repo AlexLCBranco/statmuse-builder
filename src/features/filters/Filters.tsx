@@ -137,10 +137,13 @@ export function Filters({ query, onChange, onReplace, onSubmit, recent, corner }
             <PlayerCombobox
               id="player"
               large
+              withTeams
               value={query.player}
               onChange={(player) => onChange({ player })}
               onSubmit={onSubmit}
-              hint={`Suggestions cover the ${PLAYERS_SEASON} rosters; any name you type still works.`}
+              placeholder="Type any player or team…"
+              listLabel="Players and teams"
+              hint={`Players (${PLAYERS_SEASON} rosters) or a team for team stats; any name you type works.`}
               recents={{
                 namesLabel: 'Recent players',
                 names: recentPlayers(recent),

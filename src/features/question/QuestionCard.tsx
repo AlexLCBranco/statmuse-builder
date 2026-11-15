@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent, type Ref } from 'react'
 
 import { isLeaders } from '../../domain/availability'
-import { buildQuestion, isReady, questionParts, tooManyFilters, type QueryState } from '../../domain/query'
+import { buildQuestion, canSwapPlayers, isReady, questionParts, tooManyFilters, type QueryState } from '../../domain/query'
 import { rotationsLink } from '../../domain/rotations'
 import { statmuseUrl } from '../../domain/slug'
 import { copyText, selectContents } from '../../lib/clipboard'
@@ -16,12 +16,14 @@ interface Props {
   /** Called when Ask is pressed without a player (or team). */
   onMissingSubject: () => void
   onClear: () => void
+  /** Swaps the Player and Vs player boxes. */
+  onSwap: () => void
 }
 
 const TOAST_MS = 1800
 
 /** The hero: the question as a sentence, its exact URL, and the actions. */
-export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear }: Props) {
+export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear, onSwap }: Props) {
   const ready = isReady(query)
   const question = buildQuestion(query)
   const url = statmuseUrl(question)
@@ -118,6 +120,12 @@ export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear }
         <button type="button" className={styles.button} onClick={onClear}>
           Clear all
         </button>
+        {/* Only rendered with two players to swap: hidden, not disabled. */}
+        {canSwapPlayers(query) && (
+          <button type="button" className={styles.button} onClick={onSwap}>
+            <span aria-hidden="true">⇄</span> Swap players
+          </button>
+        )}
         {/* The same player or team on rotationkit. With nothing to link (no
             subject, or the league) it has no href, so it can't be followed. */}
         <a

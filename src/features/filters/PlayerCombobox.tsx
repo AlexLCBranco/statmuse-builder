@@ -2,6 +2,8 @@ import { useMemo, useState, type KeyboardEvent } from 'react'
 
 import { PLAYERS } from '../../domain/data/players'
 import { findPlayers, highlightRange } from '../../domain/playerSearch'
+import { findSubjects, type SubjectHit } from '../../domain/subjectSearch'
+import { exactTeam } from '../../domain/teamSearch'
 import styles from './Filters.module.css'
 import { SuggestionList } from './SuggestionList'
 import { flatten, recentGroups, type Recents, type SuggestionGroup } from './suggestions'
@@ -21,6 +23,8 @@ interface Props {
   recents?: Recents
   /** The main box of the page is bigger than the filter boxes. */
   large?: boolean
+  /** Also suggest teams (the Player box: a team there asks for team stats). */
+  withTeams?: boolean
 }
 
 /**
@@ -34,13 +38,21 @@ interface Props {
  * The list has two states. Empty box: recent players and recent searches (if
  * `recents` is given). One letter typed: the normal name suggestions.
  */
-export function PlayerCombobox({ id, value, onChange, onSubmit, placeholder = 'Type any player…', listLabel = 'Players', hint, recents, large = false }: Props) {
+export function PlayerCombobox({ id, value, onChange, onSubmit, placeholder = 'Type any player…', listLabel = 'Players', hint, recents, large = false, withTeams = false }: Props) {
   const listId = `${id}-suggestions`
   const optionId = (i: number) => `${id}-option-${i}`
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
-  const hits = useMemo(() => findPlayers(PLAYERS, value), [value])
+  const hits: SubjectHit[] = useMemo(
+    () =>
+      withTeams
+        ? findSubjects(PLAYERS, value)
+        : findPlayers(PLAYERS, value).map((name) => ({ name, kind: 'player' as const })),
+    [value, withTeams],
+  )
   const isEmpty = value === ''
+  // A full player name, or (when teams count) a full team nickname.
+  const isKnown = PLAYERS.includes(value) || (withTeams && exactTeam(value) === value)
 
   function show() {
     setOpen(true)
@@ -63,9 +75,19 @@ export function PlayerCombobox({ id, value, onChange, onSubmit, placeholder = 'T
       : []
     : [
         {
-          items: hits.map((name) => ({
-            key: name,
-            label: <Highlighted name={name} typed={value} />,
+          items: hits.map(({ name, kind }) => ({
+            key: `${kind}:${name}`,
+            label: (
+              <>
+                <Highlighted name={name} typed={value} />
+                {/* aria-hidden: the option's accessible name stays the team name. */}
+                {kind === 'team' && (
+                  <span className={styles.kindTag} aria-hidden="true">
+                    Team
+                  </span>
+                )}
+              </>
+            ),
             pick: () => pick(name),
           })),
         },
@@ -73,7 +95,7 @@ export function PlayerCombobox({ id, value, onChange, onSubmit, placeholder = 'T
   const items = flatten(groups)
 
   // Nothing to suggest, or the only suggestion is exactly what's typed.
-  const showList = open && items.length > 0 && !(hits.length === 1 && hits[0] === value)
+  const showList = open && items.length > 0 && !(hits.length === 1 && hits[0]?.name === value)
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     // Ctrl/Cmd+Enter is the page-wide "Ask" shortcut (see App).
@@ -92,7 +114,7 @@ export function PlayerCombobox({ id, value, onChange, onSubmit, placeholder = 'T
       const first = hits[0]
       if (showList && highlighted) highlighted.pick()
       // Typed part of a name and pressed Enter: take the best suggestion.
-      else if (showList && first && !PLAYERS.includes(value)) pick(first)
+      else if (showList && first && !isKnown) pick(first.name)
       else if (value.trim()) onSubmit()
     }
   }

@@ -263,6 +263,15 @@
   font-weight: var(--weight-semibold);
 }
 
+/* "Team" after a team in the Player box's list, so it reads apart from players. */
+.kindTag {
+  margin-left: var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
 .emptyOption {
   padding: var(--space-3) var(--space-4);
   color: var(--color-muted);

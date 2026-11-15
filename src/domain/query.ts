@@ -1,5 +1,6 @@
 import { isGameLog, isLeaders, offersFilter, offersLastN, periodOptions, statOptions, type FilterKey } from './availability'
 import { MAX_LAST_N } from './options'
+import { exactTeam } from './teamSearch'
 
 export type Mode = 'player' | 'leaders'
 export type View = 'averages' | 'gamelog'
@@ -82,9 +83,39 @@ export function setMode(query: QueryState, mode: Mode): QueryState {
   return { ...next, stat: statOptions(next).some((o) => o.value === query.stat) ? query.stat : 'points' }
 }
 
-/** Who the question is about: the player, or the team in leaders mode. */
+/**
+ * Who the question is about: what's in the Player box (a player, or a team
+ * for team stats), or the team in leaders mode.
+ */
 export function subject(query: QueryState): string {
   return isLeaders(query) ? query.team : query.player.trim()
+}
+
+/**
+ * The team in the Player box, if it holds one ("timberwolves" -> "Timberwolves"),
+ * else null. A team there makes a team-stats question with the usual filters:
+ * "Timberwolves stats this season without Anthony Edwards". The question
+ * itself needs nothing special; this is for what links to a team page.
+ */
+export function playerBoxTeam(query: QueryState): string | null {
+  return isLeaders(query) ? null : exactTeam(query.player)
+}
+
+/**
+ * The Swap players button shows only when there are two players to swap:
+ * player mode (leaders has no Vs player) with both boxes filled.
+ */
+export function canSwapPlayers(query: QueryState): boolean {
+  return offersFilter(query, 'vsPlayer') && query.player.trim() !== '' && query.vsPlayer.trim() !== ''
+}
+
+/**
+ * "Luka Doncic stats vs Devin Booker" -> "Devin Booker stats vs Luka Doncic".
+ * Only the two boxes change; every other filter stays.
+ */
+export function swapPlayers(query: QueryState): QueryState {
+  if (!canSwapPlayers(query)) return query
+  return { ...query, player: query.vsPlayer.trim(), vsPlayer: query.player.trim() }
 }
 
 /** Ask and Copy need a subject: a player, or a team in leaders mode. */

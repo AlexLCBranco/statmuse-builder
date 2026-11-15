@@ -22,7 +22,7 @@ const group = (page: Page, name: string) => page.getByRole('group', { name, exac
 const chip = (page: Page, groupName: string, name: string) => group(page, groupName).getByRole('button', { name, exact: true })
 const playerBox = (page: Page) => page.getByRole('combobox', { name: 'Player', exact: true })
 const teamBox = (page: Page) => page.getByRole('combobox', { name: 'Team', exact: true })
-const playerList = (page: Page) => page.getByRole('listbox', { name: 'Players', exact: true })
+const playerList = (page: Page) => page.getByRole('listbox', { name: 'Players and teams', exact: true })
 const teamList = (page: Page) => page.getByRole('listbox', { name: 'Leader teams' })
 const resetButton = (page: Page, row: string) => page.getByRole('button', { name: `Reset ${row}`, exact: true })
 
@@ -243,6 +243,97 @@ test('without box: a teammate who sat out', async ({ page }) => {
   await expect(without).toHaveValue('Stephen Curry')
   await expect(question(page)).toHaveText('Draymond Green stats without Stephen Curry career')
   await expect(askLink(page)).toHaveAttribute('href', `${ASK}draymond-green-stats-without-stephen-curry-career`)
+})
+
+const swapButton = (page: Page) => page.getByRole('button', { name: 'Swap players' })
+
+test('Swap players: shows only with both players, swaps them, keeps the filters', async ({ page }) => {
+  const vs = page.getByRole('combobox', { name: 'Vs player' })
+  // Hidden (not disabled) until both boxes are filled.
+  await expect(swapButton(page)).toHaveCount(0)
+  await playerBox(page).fill('Luka Doncic')
+  await expect(swapButton(page)).toHaveCount(0)
+  await playerBox(page).fill('')
+  await vs.fill('Devin Booker')
+  await expect(swapButton(page)).toHaveCount(0)
+  await playerBox(page).fill('Luka Doncic')
+  await expect(swapButton(page)).toBeVisible()
+  await expect(swapButton(page)).not.toHaveAttribute('aria-disabled')
+
+  // It sits right after Clear all.
+  const after = await page.getByRole('button', { name: 'Clear all' }).evaluate((el) => el.nextElementSibling?.textContent)
+  expect(after).toBe('⇄ Swap players')
+
+  await chip(page, 'Stat', 'Points').click()
+  await chip(page, 'Result', 'Wins').click()
+  await chip(page, 'Period', 'Career').click()
+  await expect(question(page)).toHaveText('Luka Doncic points vs Devin Booker in wins career')
+
+  await swapButton(page).click()
+  await expect(playerBox(page)).toHaveValue('Devin Booker')
+  await expect(vs).toHaveValue('Luka Doncic')
+  await expect(question(page)).toHaveText('Devin Booker points vs Luka Doncic in wins career')
+  await expect(page.getByTestId('question-url')).toHaveText(`${ASK}devin-booker-points-vs-luka-doncic-in-wins-career`)
+  await expect(askLink(page)).toHaveAttribute('href', `${ASK}devin-booker-points-vs-luka-doncic-in-wins-career`)
+  await expect(page.getByTestId('rotations')).toHaveText('Devin Booker rotations ↗')
+  await expect(chip(page, 'Stat', 'Points')).toHaveAttribute('aria-pressed', 'true')
+  await expect(chip(page, 'Result', 'Wins')).toHaveAttribute('aria-pressed', 'true')
+  await expect(chip(page, 'Period', 'Career')).toHaveAttribute('aria-pressed', 'true')
+
+  // Ask sends the swapped question.
+  expect(await ask(page)).toBe(`${ASK}devin-booker-points-vs-luka-doncic-in-wins-career`)
+
+  // Never in Team leaders mode, even though both values are kept.
+  await chip(page, 'Mode', 'Team leaders').click()
+  await expect(swapButton(page)).toHaveCount(0)
+  await chip(page, 'Mode', 'Player').click()
+  await expect(swapButton(page)).toBeVisible()
+
+  // Emptying either box hides it again.
+  await vs.fill('')
+  await expect(swapButton(page)).toHaveCount(0)
+})
+
+test('a team in the Player box: team stats with every filter', async ({ page }) => {
+  await playerBox(page).fill('timb')
+  const list = playerList(page)
+  await expect(list.getByRole('option').first()).toHaveText('TimberwolvesTeam')
+  await list.getByRole('option', { name: 'Timberwolves', exact: true }).click()
+  await expect(playerBox(page)).toHaveValue('Timberwolves')
+  await chip(page, 'Period', 'This season').click()
+  await page.getByRole('combobox', { name: 'Without' }).fill('Anthony Edwards')
+  await expect(question(page)).toHaveText('Timberwolves stats without Anthony Edwards this season')
+  expect(await ask(page)).toBe(`${ASK}timberwolves-stats-without-anthony-edwards-this-season`)
+  // Rotations goes to the team page, not a player called "Timberwolves".
+  await expect(page.getByTestId('rotations')).toHaveAttribute('href', `${ROTATIONKIT}#/team/MIN`)
+
+  // Every filter is still offered with a team subject.
+  for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period']) await expect(group(page, name)).toBeVisible()
+  for (const name of ['Opponent', 'Vs player', 'Without']) await expect(page.getByRole('combobox', { name })).toBeVisible()
+
+  // Players still come up, and Enter on a partial name takes the best match.
+  await playerBox(page).fill('lebr')
+  await expect(playerList(page).getByRole('option').first()).toHaveText('LeBron James')
+  await playerBox(page).fill('celt')
+  await playerBox(page).press('Enter')
+  await expect(playerBox(page)).toHaveValue('Celtics')
+  // Enter on a full team name sends it.
+  const popupPromise = page.waitForEvent('popup')
+  await playerBox(page).press('Enter')
+  const popup = await popupPromise
+  expect(popup.url()).toBe(`${ASK}celtics-stats-without-anthony-edwards-this-season`)
+  await popup.close()
+
+  // Any typed team name works, in any case.
+  await playerBox(page).fill('trail blazers')
+  await playerBox(page).blur()
+  await expect(question(page)).toHaveText('trail blazers stats without Anthony Edwards this season')
+
+  // Team leaders mode is unchanged: the team's top players.
+  await chip(page, 'Mode', 'Team leaders').click()
+  await teamBox(page).fill('Timberwolves')
+  await teamBox(page).press('Enter')
+  await expect(question(page)).toHaveText('Timberwolves points leaders this season')
 })
 
 test('team leaders mode: builds a leaders question and sends it', async ({ page }) => {
@@ -790,12 +881,15 @@ test.describe('layout at 1920x1080', () => {
     await expectCleanLayout(page)
   })
 
-  test('the action row, Rotations included, fits on one line', async ({ page }) => {
+  test('the action row, Swap players and Rotations included, fits on one line', async ({ page }) => {
     await page.evaluate(() => document.fonts.ready)
     await seedRecent(page, SEEDED)
-    // A long name makes the longest Rotations label.
+    // A long name makes the longest Rotations label; a Vs player shows Swap.
     await playerBox(page).fill('Giannis Antetokounmpo')
+    await page.getByRole('combobox', { name: 'Vs player' }).fill('Shai Gilgeous-Alexander')
+    await page.getByRole('combobox', { name: 'Vs player' }).blur()
     await expect(page.getByTestId('rotations')).toHaveText('Giannis Antetokounmpo rotations ↗')
+    await expect(page.getByRole('button', { name: 'Swap players' })).toBeVisible()
     const buttons = page.getByRole('region', { name: 'Your question' }).locator('a, button')
     const tops = new Set<number>()
     for (const box of await buttons.all()) tops.add(Math.round((await box.boundingBox())!.y))
@@ -1101,7 +1195,7 @@ test('a pressed chip or switch is an orange tint with an accent edge, not white'
 })
 
 test('suggests 2026-27 rookies from the synced roster list', async ({ page }) => {
-  await expect(page.getByText('Suggestions cover the 2026-27 rosters')).toBeVisible()
+  await expect(page.getByText('Players (2026-27 rosters) or a team for team stats')).toBeVisible()
   await playerBox(page).fill('cooper fl')
   await expect(playerList(page).getByRole('option')).toHaveText(['Cooper Flagg'])
 })

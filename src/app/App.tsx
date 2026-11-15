@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { isLeaders } from '../domain/availability'
 import { applyFactory, startQuery } from '../domain/defaults'
-import { buildQuestion, clearAll, type QueryState } from '../domain/query'
+import { buildQuestion, clearAll, swapPlayers, type QueryState } from '../domain/query'
 import { DefaultsMenu } from '../features/defaults/DefaultsMenu'
 import { useDefaults } from '../features/defaults/useDefaults'
 import { Filters } from '../features/filters/Filters'
@@ -80,6 +80,7 @@ export function App() {
             onAsk={() => add({ question: buildQuestion(query), query })}
             onMissingSubject={focusFirst}
             onClear={clear}
+            onSwap={() => setQuery(swapPlayers)}
           />
           <Filters
             query={query}

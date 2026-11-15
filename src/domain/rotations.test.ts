@@ -46,6 +46,18 @@ describe('rotationsLink: player mode', () => {
   })
 })
 
+describe('rotationsLink: a team in the Player box', () => {
+  it('links the team page, in any case and in both views', () => {
+    expect(rotationsLink(player('Timberwolves'))).toEqual({ label: 'Timberwolves rotations', href: `${ROTATIONKIT}#/team/MIN` })
+    expect(rotationsLink(player('trail blazers'))).toEqual({ label: 'Trail Blazers rotations', href: `${ROTATIONKIT}#/team/POR` })
+    expect(rotationsLink(player('Lakers', { view: 'gamelog' })).href).toBe(`${ROTATIONKIT}#/team/LAL`)
+  })
+
+  it('a player name that is not a team still links the player page', () => {
+    expect(rotationsLink(player('Anthony Edwards')).href).toBe(`${ROTATIONKIT}#/player?name=Anthony%20Edwards`)
+  })
+})
+
 describe('rotationsLink: team leaders mode', () => {
   it('links a team by its tricode', () => {
     expect(rotationsLink(leaders('Lakers'))).toEqual({ label: 'Lakers rotations', href: `${ROTATIONKIT}#/team/LAL` })

@@ -14,6 +14,19 @@ export const TEAM_CITIES: Readonly<Record<string, string>> = {
 }
 
 /**
+ * How well a team matches an already normalized search (lower is better), or
+ * null. Nickname matches ("jaz") rank 0-2 like `matchRank`. City matches
+ * ("utah") must start a word ("la" shouldn't find Atlanta) and rank after
+ * every nickname match (3-4).
+ */
+export function teamRank(team: string, search: string): number | null {
+  const byName = matchRank(team, search)
+  if (byName !== null) return byName
+  const byCity = matchRank(`${TEAM_CITIES[team] ?? ''} ${team}`, search)
+  return byCity === null || byCity === 2 ? null : byCity + 3
+}
+
+/**
  * The teams matching what was typed, best first. Nickname matches ("jaz")
  * come before city matches ("utah"); ties keep A-to-Z order. Empty input
  * returns every team.
@@ -23,11 +36,7 @@ export function findTeams(typed: string, teams: readonly string[] = TEAMS): stri
   if (!search) return [...teams]
   const ranked: { team: string; rank: number }[] = []
   for (const team of teams) {
-    const byName = matchRank(team, search)
-    const byCity = matchRank(`${TEAM_CITIES[team] ?? ''} ${team}`, search)
-    // City matches must start a word ("la" shouldn't find Atlanta) and rank
-    // after every nickname match (ranks 0-2).
-    const rank = byName ?? (byCity === null || byCity === 2 ? null : byCity + 3)
+    const rank = teamRank(team, search)
     if (rank !== null) ranked.push({ team, rank })
   }
   ranked.sort((a, b) => a.rank - b.rank)

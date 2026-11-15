@@ -10,7 +10,10 @@ import {
   isReady,
   isRowDefault,
   parseLastN,
+  canSwapPlayers,
+  playerBoxTeam,
   questionParts,
+  swapPlayers,
   resetRow,
   setMode,
   tooManyFilters,
@@ -394,5 +397,121 @@ describe('isReady', () => {
   it('treats whitespace as no player', () => {
     expect(isReady(q({ player: '   ' }))).toBe(false)
     expect(isReady(q({ player: 'X' }))).toBe(true)
+  })
+})
+
+describe('swapPlayers', () => {
+  it('swaps the Player and Vs player boxes, so the question turns round', () => {
+    const before = q({ player: 'Luka Doncic', vsPlayer: 'Devin Booker' })
+    expect(buildQuestion(before)).toBe('Luka Doncic stats vs Devin Booker')
+    const after = swapPlayers(before)
+    expect(after.player).toBe('Devin Booker')
+    expect(after.vsPlayer).toBe('Luka Doncic')
+    expect(buildQuestion(after)).toBe('Devin Booker stats vs Luka Doncic')
+  })
+
+  it('keeps every other filter as it is', () => {
+    const before = log({
+      player: 'Luka Doncic',
+      vsPlayer: 'Devin Booker',
+      stat: 'assists',
+      quarter: 'in the 4th quarter',
+      court: 'at home',
+      opponent: 'Suns',
+      without: 'Kyrie Irving',
+      result: 'in wins',
+      period: 'career',
+      lastN: '7',
+      team: 'Lakers',
+    })
+    expect(swapPlayers(before)).toEqual({ ...before, player: 'Devin Booker', vsPlayer: 'Luka Doncic' })
+  })
+
+  it('trims both names, and swapping twice gives the same query back', () => {
+    const before = q({ player: ' Luka Doncic ', vsPlayer: 'Devin Booker  ' })
+    expect(swapPlayers(before)).toMatchObject({ player: 'Devin Booker', vsPlayer: 'Luka Doncic' })
+    const clean = q({ player: 'Luka Doncic', vsPlayer: 'Devin Booker', result: 'in losses' })
+    expect(swapPlayers(swapPlayers(clean))).toEqual(clean)
+  })
+
+  it('works with a team in the Player box too', () => {
+    expect(buildQuestion(swapPlayers(q({ player: 'Timberwolves', vsPlayer: 'Stephen Curry' })))).toBe(
+      'Stephen Curry stats vs Timberwolves',
+    )
+  })
+
+  it('changes nothing when there is nothing to swap', () => {
+    for (const query of [q({ vsPlayer: '' }), q({ player: '', vsPlayer: 'Devin Booker' }), leaders({ vsPlayer: 'Devin Booker' })]) {
+      expect(swapPlayers(query)).toBe(query)
+    }
+  })
+})
+
+describe('canSwapPlayers: when the Swap players button shows', () => {
+  it('shows only when both Player and Vs player are filled', () => {
+    expect(canSwapPlayers(q({ player: 'Luka Doncic', vsPlayer: 'Devin Booker' }))).toBe(true)
+    expect(canSwapPlayers(log({ vsPlayer: 'Stephen Curry' }))).toBe(true)
+    expect(canSwapPlayers(q({ player: 'Luka Doncic', vsPlayer: '' }))).toBe(false)
+    expect(canSwapPlayers(q({ player: '', vsPlayer: 'Devin Booker' }))).toBe(false)
+    expect(canSwapPlayers(q({ player: '', vsPlayer: '' }))).toBe(false)
+  })
+
+  it('counts a box with only spaces as empty', () => {
+    expect(canSwapPlayers(q({ player: '   ', vsPlayer: 'Devin Booker' }))).toBe(false)
+    expect(canSwapPlayers(q({ player: 'Luka Doncic', vsPlayer: '  ' }))).toBe(false)
+  })
+
+  it('never shows in Team leaders mode, even with both values kept from player mode', () => {
+    expect(canSwapPlayers(leaders({ player: 'Luka Doncic', vsPlayer: 'Devin Booker' }))).toBe(false)
+  })
+})
+
+describe('a team in the Player box', () => {
+  it('is the subject of a team-stats question with the usual filters', () => {
+    // Checked on StatMuse 2026-11-15: this order and "this season without
+    // Anthony Edwards" give the same answer (record, PPG, a game table).
+    expect(buildQuestion(q({ player: 'Timberwolves', period: 'this season', without: 'Anthony Edwards' }))).toBe(
+      'Timberwolves stats without Anthony Edwards this season',
+    )
+    expect(isReady(q({ player: 'Timberwolves' }))).toBe(true)
+  })
+
+  it('keeps every filter, in both views', () => {
+    const team = q({
+      player: 'Celtics',
+      stat: 'points',
+      quarter: 'in the 4th quarter',
+      court: 'at home',
+      opponent: 'Lakers',
+      vsPlayer: 'LeBron James',
+      without: 'Jayson Tatum',
+      result: 'in wins',
+      lastN: '10',
+    })
+    expect(buildQuestion(team)).toBe(
+      'Celtics points in the 4th quarter at home vs Lakers vs LeBron James without Jayson Tatum in wins last 10 games',
+    )
+    expect(activeFilterCount(team)).toBe(7)
+    expect(buildQuestion({ ...team, view: 'gamelog', stat: 'stats' })).toBe(
+      'Celtics game log in the 4th quarter at home vs Lakers vs LeBron James without Jayson Tatum in wins last 10 games',
+    )
+  })
+
+  it('a typed team name works as typed, like a typed player name', () => {
+    expect(buildQuestion(q({ player: 'trail blazers', result: 'in losses' }))).toBe('trail blazers stats in losses')
+  })
+
+  it('playerBoxTeam finds the team in any case, only in player mode', () => {
+    expect(playerBoxTeam(q({ player: 'Timberwolves' }))).toBe('Timberwolves')
+    expect(playerBoxTeam(q({ player: ' trail blazers ' }))).toBe('Trail Blazers')
+    expect(playerBoxTeam(q({ player: 'Anthony Edwards' }))).toBeNull()
+    expect(playerBoxTeam(q({ player: '' }))).toBeNull()
+    expect(playerBoxTeam(leaders({ player: 'Timberwolves' }))).toBeNull()
+  })
+
+  it('Team leaders mode is unchanged: a team there gives its top players', () => {
+    expect(buildQuestion(leaders({ team: 'Timberwolves', player: 'Timberwolves', period: 'this season' }))).toBe(
+      'Timberwolves points leaders this season',
+    )
   })
 })

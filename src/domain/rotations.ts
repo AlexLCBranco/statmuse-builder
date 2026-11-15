@@ -1,6 +1,6 @@
 import { isLeaders } from './availability'
 import { TEAMS } from './options'
-import { subject, type QueryState } from './query'
+import { playerBoxTeam, subject, type QueryState } from './query'
 
 /** rotationkit: a sister app that charts when each player is on the court. */
 export const ROTATIONKIT = 'https://rotationkit.vercel.app/'
@@ -32,10 +32,12 @@ const DISABLED: RotationsLink = { label: 'Rotations', href: null }
 export function rotationsLink(query: QueryState): RotationsLink {
   const who = subject(query)
   if (!who) return DISABLED
-  if (isLeaders(query)) {
-    if (!TEAMS.includes(who)) return DISABLED
-    const code = TEAM_TRICODES[who]
-    return code ? { label: `${who} rotations`, href: `${ROTATIONKIT}#/team/${code}` } : DISABLED
+  // A team typed in the Player box links to the team page, like leaders mode.
+  const team = isLeaders(query) ? who : playerBoxTeam(query)
+  if (team !== null) {
+    if (!TEAMS.includes(team)) return DISABLED
+    const code = TEAM_TRICODES[team]
+    return code ? { label: `${team} rotations`, href: `${ROTATIONKIT}#/team/${code}` } : DISABLED
   }
   return { label: `${who} rotations`, href: `${ROTATIONKIT}#/player?name=${encodeURIComponent(who)}` }
 }
