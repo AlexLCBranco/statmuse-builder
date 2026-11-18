@@ -52,6 +52,16 @@ export const PERIOD_OPTIONS: readonly Option[] = [
   { value: 'career', label: 'Career' },
 ]
 
+/**
+ * Back-to-backs. StatMuse reads "on the second night of a back to back" as
+ * "no rest" (0 days) for players, teams and leaders. The first night is not
+ * offered: every phrasing tried came back with the same 0-rest games.
+ */
+export const REST_OPTIONS: readonly Option[] = [
+  { value: '', label: 'Any' },
+  { value: 'on the second night of a back to back', label: '2nd night' },
+]
+
 export const RESULT_OPTIONS: readonly Option[] = [
   { value: '', label: 'Any' },
   { value: 'in wins', label: 'Wins' },

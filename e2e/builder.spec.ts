@@ -490,6 +490,46 @@ test('rotationkit opens the player page for a current player (live site only)', 
   await page.close()
 })
 
+test('back-to-back preset: one click adds "on the second night of a back to back"', async ({ page }) => {
+  await playerBox(page).fill('Jayson Tatum')
+  await chip(page, 'Stat', 'Points').click()
+  await chip(page, 'Result', 'Wins').click()
+  const b2b = chip(page, 'Back-to-back', '2nd night')
+  await b2b.click()
+  await expect(b2b).toHaveAttribute('aria-pressed', 'true')
+  await expect(question(page)).toHaveText('Jayson Tatum points on the second night of a back to back in wins')
+  await expect(askLink(page)).toHaveAttribute('href', `${ASK}jayson-tatum-points-on-the-second-night-of-a-back-to-back-in-wins`)
+  // The row's ✕ takes it off again.
+  await resetButton(page, 'Back-to-back').click()
+  await expect(question(page)).toHaveText('Jayson Tatum points in wins')
+  await expect(chip(page, 'Back-to-back', 'Any')).toHaveAttribute('aria-pressed', 'true')
+
+  // Leaders and the game log take it too.
+  await b2b.click()
+  await chip(page, 'View', 'Game by game').click()
+  await expect(question(page)).toHaveText('Jayson Tatum points game log on the second night of a back to back in wins')
+  await chip(page, 'Mode', 'Team leaders').click()
+  await teamBox(page).fill('lakers')
+  await teamBox(page).press('Enter')
+  await expect(question(page)).toHaveText('Lakers points leaders on the second night of a back to back in wins')
+})
+
+test('StatMuse answers the back-to-back question (live site only)', async ({ page, browser }) => {
+  // Hits the real StatMuse, so only after a deploy (npm run e2e:prod).
+  test.skip(!process.env.BASE_URL, 'checks the external site; runs in e2e:prod')
+  await playerBox(page).fill('LeBron James')
+  await chip(page, 'Back-to-back', '2nd night').click()
+  await chip(page, 'Period', 'Last season').click()
+  const url = (await askLink(page).getAttribute('href'))!
+  expect(url).toBe(`${ASK}lebron-james-stats-on-the-second-night-of-a-back-to-back-last-season`)
+  // A fresh page, without the StatMuse stub of the test's own context.
+  const live = await browser.newPage()
+  await live.goto(url)
+  // StatMuse's sentence names the filter it applied: no rest (0 days).
+  await expect(live.locator('main')).toContainText(/LeBron James .*(on no rest|0 days of rest)/, { timeout: 30_000 })
+  await live.close()
+})
+
 test('game by game view: "game log", with every option averages has', async ({ page }) => {
   await playerBox(page).fill('LeBron James')
   await chip(page, 'Stat', 'Points').click()

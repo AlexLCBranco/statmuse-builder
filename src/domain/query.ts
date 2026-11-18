@@ -15,6 +15,7 @@ export type View = 'averages' | 'gamelog'
  * filter). `lastN` is the custom "last N games" box, kept as a string because
  * it mirrors a text input ('' = empty). `vsPlayer` is a typed player matchup
  * ("vs Kon Knueppel") and `without` a teammate who sat out, both free text.
+ * `rest` is the back-to-back preset.
  */
 export interface QueryState {
   mode: Mode
@@ -27,6 +28,7 @@ export interface QueryState {
   opponent: string
   vsPlayer: string
   without: string
+  rest: string
   period: string
   lastN: string
   result: string
@@ -36,7 +38,7 @@ export interface QueryState {
  * The button rows: the part of a query that "default selections" saves.
  * `period` and `lastN` go together (the custom "last N games").
  */
-export type Selections = Pick<QueryState, 'mode' | 'view' | 'stat' | 'quarter' | 'court' | 'result' | 'period' | 'lastN'>
+export type Selections = Pick<QueryState, 'mode' | 'view' | 'stat' | 'quarter' | 'court' | 'rest' | 'result' | 'period' | 'lastN'>
 
 /** First load: nothing chosen, "All stats", every filter on "Any". */
 export const DEFAULT_QUERY: QueryState = {
@@ -50,6 +52,7 @@ export const DEFAULT_QUERY: QueryState = {
   opponent: '',
   vsPlayer: '',
   without: '',
+  rest: '',
   period: '',
   lastN: '',
   result: '',
@@ -131,6 +134,7 @@ function filterWords(query: QueryState): [FilterKey, string][] {
     ['opponent', query.opponent && `vs ${query.opponent}`],
     ['vsPlayer', query.vsPlayer.trim() && `vs ${query.vsPlayer.trim()}`],
     ['without', query.without.trim() && `without ${query.without.trim()}`],
+    ['rest', query.rest],
     ['result', query.result],
     ['period', effectivePeriod(query)],
   ]
@@ -155,7 +159,7 @@ function statWords(query: QueryState, stat: string): string {
 
 /**
  * The question in order: subject, stat, quarter, court, opponent team,
- * opponent player, without, result, period. StatMuse reads both "vs" parts
+ * opponent player, without, back-to-back, result, period. StatMuse reads both "vs" parts
  * together ("vs Warriors vs Stephen Curry"). Empty and hidden
  * filters are left out; the subject part is always first, even when empty, so
  * the UI can show a placeholder in its place.

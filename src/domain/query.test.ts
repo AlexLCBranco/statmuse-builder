@@ -19,6 +19,7 @@ import {
   tooManyFilters,
   type QueryState,
 } from './query'
+import { statmuseUrl } from './slug'
 
 /** A player-mode query. */
 const q = (overrides: Partial<QueryState>): QueryState => ({ ...DEFAULT_QUERY, player: 'Jayson Tatum', ...overrides })
@@ -46,6 +47,7 @@ describe('DEFAULT_QUERY', () => {
       opponent: '',
       vsPlayer: '',
       without: '',
+      rest: '',
       period: '',
       lastN: '',
       result: '',
@@ -222,6 +224,44 @@ describe('buildQuestion (game by game)', () => {
 
   it('only applies in player mode', () => {
     expect(buildQuestion(leaders({ view: 'gamelog' }))).toBe('Celtics points leaders')
+  })
+})
+
+describe('back-to-back preset', () => {
+  const B2B = 'on the second night of a back to back'
+
+  it('adds the verified phrasing after the vs/without parts, before result and period', () => {
+    expect(buildQuestion(q({ rest: B2B }))).toBe('Jayson Tatum stats on the second night of a back to back')
+    expect(
+      buildQuestion(q({ stat: 'points', quarter: 'in the 4th quarter', court: 'on the road', opponent: 'Knicks', rest: B2B, period: 'career' })),
+    ).toBe('Jayson Tatum points in the 4th quarter on the road vs Knicks on the second night of a back to back career')
+    expect(buildQuestion(q({ without: 'Jaylen Brown', rest: B2B, result: 'in wins' }))).toBe(
+      'Jayson Tatum stats without Jaylen Brown on the second night of a back to back in wins',
+    )
+  })
+
+  it('works for team leaders, league leaders and the game log', () => {
+    expect(buildQuestion(leaders({ team: 'Lakers', rest: B2B, period: 'last season' }))).toBe(
+      'Lakers points leaders on the second night of a back to back last season',
+    )
+    expect(buildQuestion(leaders({ team: 'NBA', rest: B2B }))).toBe('NBA points leaders on the second night of a back to back')
+    expect(buildQuestion(log({ rest: B2B, result: 'in wins', period: 'last season' }))).toBe(
+      'LeBron James game log on the second night of a back to back in wins last season',
+    )
+  })
+
+  it('goes into the URL slug', () => {
+    expect(statmuseUrl(buildQuestion(q({ rest: B2B })))).toBe(
+      'https://www.statmuse.com/nba/ask/jayson-tatum-stats-on-the-second-night-of-a-back-to-back',
+    )
+  })
+
+  it('is a resettable row, and Clear all puts it back to Any', () => {
+    const query = q({ rest: B2B })
+    expect(isRowDefault(query, 'rest')).toBe(false)
+    expect(resetRow(query, 'rest').rest).toBe('')
+    expect(clearAll(query).rest).toBe('')
+    expect(activeFilterCount(query)).toBe(1)
   })
 })
 

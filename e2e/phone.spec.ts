@@ -135,6 +135,12 @@ test('tap targets are finger-sized', async ({ page }) => {
   for (const height of rows) expect(height).toBeGreaterThanOrEqual(44)
 })
 
+test('the back-to-back preset works with a tap', async ({ page }) => {
+  await playerBox(page).fill('LeBron James')
+  await chip(page, 'Back-to-back', '2nd night').tap()
+  await expect(page.getByTestId('question')).toHaveText('LeBron James stats on the second night of a back to back')
+})
+
 test('Ask StatMuse is on the first screen', async ({ page }) => {
   await expect(askLink(page)).toBeInViewport({ ratio: 1 })
 })

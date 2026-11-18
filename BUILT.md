@@ -5,6 +5,8 @@ Entries dated before 2026-11-16 were backfilled from the git commit messages (da
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
 ## 2026-11-18
+- SM-3 — Back-to-back preset (v0.18.0)
+  A "Back-to-back: 2nd night" chip adds "on the second night of a back to back" to any question; 1st night is left out (StatMuse misreads it).
 - SM-1 — Phone-usable site (v0.17.0)
   On a phone the info tooltips (version, "Pinned is full") open on a tap, and dropdowns stay above the keyboard.
 - Pinned searches in the empty box; dropdowns float over the page; player list re-synced (v0.16.0)

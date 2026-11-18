@@ -9,6 +9,7 @@ import {
   MAX_LAST_N,
   MODE_OPTIONS,
   QUARTER_OPTIONS,
+  REST_OPTIONS,
   RESULT_OPTIONS,
   VIEW_OPTIONS,
 } from '../../domain/options'
@@ -188,6 +189,11 @@ export function Filters({ query, onChange, onReplace, onSubmit, saved, corner }:
           'result',
           'Result',
           <ChipGroup label="Result" options={RESULT_OPTIONS} value={query.result} onChange={(result) => onChange({ result })} />,
+        )}
+        {filter(
+          'rest',
+          'Back-to-back',
+          <ChipGroup label="Back-to-back" options={REST_OPTIONS} value={query.rest} onChange={(rest) => onChange({ rest })} />,
         )}
       </Row>
 

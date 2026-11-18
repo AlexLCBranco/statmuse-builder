@@ -105,6 +105,7 @@ test('save, reload: the saved chips are pressed and the boxes are empty', async 
     stat: 'points',
     quarter: 'in the 4th quarter',
     court: 'at home',
+    rest: '',
     result: 'in wins',
     period: 'last 10 games',
     lastN: '',
@@ -241,6 +242,15 @@ test('an invalid saved value falls back for that row only, no errors', async ({ 
   // Boxes are never read from the saved defaults.
   await expectBoxesEmpty(page)
   expect(errors).toEqual([])
+})
+
+test('the back-to-back preset can be a default', async ({ page }) => {
+  await chip(page, 'Back-to-back', '2nd night').click()
+  await saveAsDefault(page)
+  expect(JSON.parse((await stored(page))!).rest).toBe('on the second night of a back to back')
+  await page.reload()
+  await pressed(page, 'Back-to-back', '2nd night')
+  await expect(question(page)).toHaveText('Pick a player stats on the second night of a back to back')
 })
 
 test('a custom "last N games" round-trips', async ({ page }) => {

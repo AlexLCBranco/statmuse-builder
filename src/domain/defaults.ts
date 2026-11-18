@@ -4,6 +4,7 @@ import {
   MODE_OPTIONS,
   PERIOD_OPTIONS,
   QUARTER_OPTIONS,
+  REST_OPTIONS,
   RESULT_OPTIONS,
   STAT_OPTIONS,
   VIEW_OPTIONS,
@@ -27,8 +28,8 @@ export interface StoredDefaults extends Selections {
 
 /** The button rows of a query. */
 function pick(query: QueryState): Selections {
-  const { mode, view, stat, quarter, court, result, period, lastN } = query
-  return { mode, view, stat, quarter, court, result, period, lastN }
+  const { mode, view, stat, quarter, court, rest, result, period, lastN } = query
+  return { mode, view, stat, quarter, court, rest, result, period, lastN }
 }
 
 /** What the app starts with when nothing is saved. */
@@ -59,6 +60,7 @@ const ROW_OPTIONS: Record<Exclude<keyof Selections, 'lastN'>, readonly Option[]>
   stat: STAT_OPTIONS,
   quarter: QUARTER_OPTIONS,
   court: COURT_OPTIONS,
+  rest: REST_OPTIONS,
   result: RESULT_OPTIONS,
   period: PERIOD_OPTIONS,
 }

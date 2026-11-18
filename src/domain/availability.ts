@@ -8,7 +8,7 @@ import type { QueryState } from './query'
  * Hidden filters keep their value in the state, so switching back restores
  * them; they are just left out of the question.
  */
-export type FilterKey = 'stat' | 'quarter' | 'court' | 'opponent' | 'vsPlayer' | 'without' | 'result' | 'period'
+export type FilterKey = 'stat' | 'quarter' | 'court' | 'opponent' | 'vsPlayer' | 'without' | 'rest' | 'result' | 'period'
 
 type Context = Pick<QueryState, 'mode' | 'view' | 'team'>
 
