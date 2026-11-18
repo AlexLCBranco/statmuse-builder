@@ -195,6 +195,14 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Tests: 219 unit tests (domain + the version check), 64 Playwright e2e tests (56 desktop, 8 phone; two run only in `e2e:prod`). `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
+- **Live test runs stay under Vercel's DDoS mitigation** (2026-11-18): a
+  full `e2e:prod` run (desktop + phone) tripped Vercel's automatic DDoS
+  mitigation (`sys_dos_mitigation`, a "Security Checkpoint" page with HTTP
+  403 for several minutes). On the Hobby plan it cannot be bypassed (System
+  Bypass needs Pro, and a custom firewall rule does not skip it), so the
+  tests send less: `e2e/test.ts` caches the hashed `/assets/*` files per
+  worker, and live runs use 2 workers. `npx vercel firewall overview` shows
+  challenged requests
 
 ## StatMuse compatibility
 
@@ -309,6 +317,9 @@ This is a sample, not proof that every combination works.
 
 ## Open problems
 
+- Vercel's DDoS mitigation can still challenge a live test run that sends
+  too much at once; the run then fails with "element(s) not found" and
+  timeouts, not app errors. Wait until the site answers 200 again and re-run.
 - StatMuse now hides the result table behind a sign-up prompt after a few
   questions, so checks past that point only see the answer sentence.
 - "Turnovers leaders" is ranked fewest-first on StatMuse, so there is no

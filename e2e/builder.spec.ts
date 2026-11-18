@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './test.js'
 
 const ASK = 'https://www.statmuse.com/nba/ask/'
 

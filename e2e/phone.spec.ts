@@ -1,4 +1,4 @@
-import { devices, expect, test, type Browser, type Page, type TestInfo } from '@playwright/test'
+import { cacheAssets, devices, expect, test, type Browser, type Page, type TestInfo } from './test.js'
 
 /**
  * SM-1: the site on a phone. Runs only in the `phone` project
@@ -192,6 +192,7 @@ async function buildQuestion(page: Page, press: 'tap' | 'click'): Promise<string
 
 async function desktopUrl(browser: Browser, origin: string): Promise<string> {
   const context = await browser.newContext({ ...devices['Desktop Chrome'] })
+  await cacheAssets(context)
   try {
     const page = await context.newPage()
     await page.goto(origin)

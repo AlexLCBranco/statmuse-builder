@@ -12,6 +12,9 @@ const local = !process.env.BASE_URL
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // The live site: at most 2 browsers at once, so a run stays under Vercel's
+  // automatic DDoS mitigation (see e2e/test.ts).
+  workers: local ? undefined : 2,
   reporter: 'list',
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [

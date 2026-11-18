@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './test.js'
 
 // "Default selections": the gear button, its popover, and what a reload and
 // Clear all do with the saved defaults. Each test gets a fresh browser
