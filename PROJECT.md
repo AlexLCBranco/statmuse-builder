@@ -194,6 +194,20 @@ Layers: `app -> features -> lib -> domain -> styles`
 Rule: a chip or filter is only offered in a mode where a real StatMuse page
 answered that phrasing correctly. The rules live in `domain/availability.ts`.
 
+### Checked 2026-11-18 (back-to-backs, SM-3 step 1)
+
+Opened in a browser. Each answer fell back to 2025-26 ("this season" has few
+games yet); DR is StatMuse's days-of-rest column.
+
+| Question | Result |
+|---|---|
+| LeBron James stats on the second night of a back to back this season | answered: 6 games "on no rest" (DR 0), 2025-26 |
+| Lakers stats on the second night of a back to back last season | answered: 9-5, 116.5 PPG "on no rest" |
+| Lakers points leaders on the second night of a back to back last season | answered: ranked list, "exactly 0 days of rest" (Doncic 39.4) |
+| LeBron James game log on the second night of a back to back in wins last season | answered: one row per game, wins and no rest applied |
+| LeBron James stats on the first night of a back to back last season | **wrong games**: the same 0-rest games (1/13, 1/18) as the 2nd night |
+| LeBron James stats in the first game of a back to back last season | **wrong games**: again a 0-rest game (1/13) |
+
 ### Checked 2026-11-15 (team in the Player box)
 
 | Question | Result |
