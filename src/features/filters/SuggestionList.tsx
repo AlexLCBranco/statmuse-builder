@@ -1,3 +1,5 @@
+import { useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react'
+
 import styles from './Filters.module.css'
 import type { SuggestionGroup } from './suggestions'
 
@@ -18,12 +20,18 @@ interface Props {
  * The dropdown under a combobox. Items can be split into labelled groups;
  * the highlight index still counts straight through them, so the keyboard
  * code in the comboboxes does not need to know about groups.
+ *
+ * The list floats over the page (position: fixed), placed from its box's
+ * position on screen. Inside the scrolling builder column a plain absolute
+ * list would make that column taller and get clipped by its edge instead.
  */
 export function SuggestionList({ id, label, groups, active, optionId, hidden, emptyText }: Props) {
+  const ref = useRef<HTMLDivElement>(null)
+  const place = useFloatingPlace(ref, hidden)
   let index = 0
   const isEmpty = groups.every((group) => group.items.length === 0)
   return (
-    <div id={id} className={styles.suggestions} role="listbox" aria-label={label} hidden={hidden}>
+    <div ref={ref} id={id} className={styles.suggestions} style={place} role="listbox" aria-label={label} hidden={hidden}>
       {groups.map((group, g) => (
         <div key={group.label ?? g} role="group" aria-label={group.label} data-testid={group.label ? 'suggestion-group' : undefined}>
           {group.label && (
@@ -56,4 +64,43 @@ export function SuggestionList({ id, label, groups, active, optionId, hidden, em
       {isEmpty && emptyText && <div className={styles.emptyOption}>{emptyText}</div>}
     </div>
   )
+}
+
+/** Opening upward needs at least this much more room above than below. */
+const MIN_BELOW = 240
+
+/**
+ * Where the open list goes: under the box it belongs to (the list's parent),
+ * or above it when the window has little room below. Follows the box while
+ * any column scrolls or the window resizes. Gaps and the height cap stay in
+ * CSS; this only passes the measured numbers in.
+ */
+function useFloatingPlace(ref: RefObject<HTMLDivElement | null>, hidden: boolean): CSSProperties | undefined {
+  const [place, setPlace] = useState<CSSProperties>()
+
+  useLayoutEffect(() => {
+    const anchor = ref.current?.parentElement
+    if (hidden || !anchor) return
+    function measure() {
+      const box = anchor!.getBoundingClientRect()
+      const below = window.innerHeight - box.bottom
+      const up = below < MIN_BELOW && box.top > below
+      setPlace({
+        left: box.left,
+        width: box.width,
+        ...(up ? { top: 'auto', bottom: window.innerHeight - box.top } : { top: box.bottom }),
+        ['--room' as string]: `${Math.floor(up ? box.top : below)}px`,
+      })
+    }
+    measure()
+    // Capture: a scroll in any column (they don't bubble) moves the box.
+    window.addEventListener('scroll', measure, true)
+    window.addEventListener('resize', measure)
+    return () => {
+      window.removeEventListener('scroll', measure, true)
+      window.removeEventListener('resize', measure)
+    }
+  }, [ref, hidden])
+
+  return hidden ? undefined : place
 }

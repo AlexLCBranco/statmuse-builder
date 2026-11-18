@@ -81,6 +81,29 @@ export function recentSearches(list: readonly RecentSearch[], mode: Mode, max = 
   return list.filter((r) => r.query.mode === mode).slice(0, max)
 }
 
+/** What an empty player/team box offers in one mode. */
+export interface BoxRecents {
+  /** Recent players (player mode) or teams (leaders). */
+  names: string[]
+  /** Pinned searches of this mode, in pinned order. */
+  pinned: RecentSearch[]
+  /** Recent searches of this mode, newest first. */
+  searches: RecentSearch[]
+}
+
+/**
+ * The empty box's groups. Names come from Recent first, then from Pinned, so
+ * a player you only have pinned is still one click away.
+ */
+export function boxRecents(saved: Saved, mode: Mode): BoxRecents {
+  const all = [...saved.recent, ...saved.pinned]
+  return {
+    names: mode === 'player' ? recentPlayers(all) : recentTeams(all),
+    pinned: recentSearches(saved.pinned, mode),
+    searches: recentSearches(saved.recent, mode),
+  }
+}
+
 /**
  * Rebuilds a saved query. Entries saved before v0.7 have no mode, team or
  * view; those (and anything else missing or malformed) fall back to the

@@ -87,7 +87,7 @@ export function App() {
             onChange={update}
             onReplace={setQuery}
             onSubmit={ask}
-            recent={saved.recent}
+            saved={saved}
             corner={<DefaultsMenu onSave={() => saveDefaults(query)} onReset={factoryReset} />}
           />
         </main>

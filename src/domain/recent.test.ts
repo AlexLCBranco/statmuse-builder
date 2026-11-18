@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_QUERY, type QueryState } from './query'
 import {
   addRecent,
+  boxRecents,
   canPin,
   MAX_PINNED,
   MAX_RECENT,
@@ -132,6 +133,38 @@ describe('recent players, teams and searches', () => {
 
   it('skips entries with no name', () => {
     expect(recentPlayers([entry('stats', { player: '  ' })])).toEqual([])
+  })
+})
+
+describe('boxRecents', () => {
+  const saved: Saved = {
+    recent: [
+      entry('LeBron James stats', { player: 'LeBron James' }),
+      entry('Lakers points leaders', { mode: 'leaders', team: 'Lakers' }),
+    ],
+    pinned: [
+      entry('Stephen Curry points career', { player: 'Stephen Curry' }),
+      entry('Celtics assists leaders', { mode: 'leaders', team: 'Celtics' }),
+      entry('LeBron James points', { player: 'LeBron James' }),
+    ],
+  }
+
+  it('player mode: pinned and recent searches apart, names from both', () => {
+    const box = boxRecents(saved, 'player')
+    expect(questions(box.pinned)).toEqual(['Stephen Curry points career', 'LeBron James points'])
+    expect(questions(box.searches)).toEqual(['LeBron James stats'])
+    expect(box.names).toEqual(['LeBron James', 'Stephen Curry'])
+  })
+
+  it('leaders mode: the same for teams', () => {
+    const box = boxRecents(saved, 'leaders')
+    expect(questions(box.pinned)).toEqual(['Celtics assists leaders'])
+    expect(questions(box.searches)).toEqual(['Lakers points leaders'])
+    expect(box.names).toEqual(['Lakers', 'Celtics'])
+  })
+
+  it('nothing saved: all empty', () => {
+    expect(boxRecents({ recent: [], pinned: [] }, 'player')).toEqual({ names: [], pinned: [], searches: [] })
   })
 })
 

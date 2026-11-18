@@ -75,6 +75,7 @@
   --control-pad: 20px;
   --chip-gap: 10px;
   --popover-min: 260px;
+  --list-max-h: 420px;
   --gutter: 24px;
   --gutter-phone: 16px;
   --duration-fast: 0.2s;

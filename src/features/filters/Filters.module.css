@@ -217,15 +217,15 @@
   margin-top: var(--space-1);
 }
 
+/* Fixed: floats over the page; SuggestionList sets left, width and top (or
+   bottom when it opens upward) from the box, and --room, the space there. */
 .suggestions {
-  position: absolute;
+  position: fixed;
   z-index: 5;
-  left: 0;
-  right: 0;
-  top: calc(100% + var(--space-1));
+  margin: var(--space-1) 0;
   min-width: var(--popover-min);
   padding: var(--space-1) 0;
-  max-height: 420px;
+  max-height: min(var(--list-max-h), calc(var(--room, var(--list-max-h)) - 2 * var(--space-2)));
   overflow: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-line);

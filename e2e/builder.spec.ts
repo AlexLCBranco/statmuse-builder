@@ -624,6 +624,39 @@ test('empty team box: recent teams and recent leaders searches', async ({ page }
   await expect(question(page)).toHaveText('Lakers assists leaders this season')
 })
 
+test('empty boxes list pinned searches first, and their players and teams', async ({ page }) => {
+  // Everything pinned, nothing in Recent: the box used to show nothing.
+  await page.evaluate((list) => localStorage.setItem('smb.pinned', JSON.stringify(list)), SEEDED)
+  await page.reload()
+  const player = playerBox(page)
+  const pinned = playerList(page).getByRole('group', { name: 'Pinned searches' }).getByRole('option')
+
+  await player.click()
+  await expect(pinned).toHaveText([
+    'Stephen Curry three pointers made at home in wins last 5 games',
+    'Stephen Curry points career',
+    'Nikola Jokic game log last 5 games',
+  ])
+  await expect(playerList(page).getByRole('group', { name: 'Recent players' }).getByRole('option')).toHaveText([
+    'Stephen Curry',
+    'Nikola Jokic',
+  ])
+  await expect(playerList(page).getByRole('group', { name: 'Recent searches' })).toHaveCount(0)
+  // Pinned comes first for the arrow keys too, and picking one loads it all.
+  await player.press('ArrowDown')
+  await expect(pinned.first()).toHaveAttribute('aria-selected', 'true')
+  await player.press('Enter')
+  await expect(question(page)).toHaveText('Stephen Curry three pointers made at home in wins last 5 games')
+
+  await chip(page, 'Mode', 'Team leaders').click()
+  const team = teamBox(page)
+  await team.click()
+  await expect(teamList(page).getByRole('group', { name: 'Pinned searches' }).getByRole('option')).toHaveText([
+    'Lakers assists leaders this season',
+  ])
+  await expect(teamList(page).getByRole('group', { name: 'Recent teams' }).getByRole('option')).toHaveText(['Lakers'])
+})
+
 test('Clear all and the per-row ✕', async ({ page }) => {
   await playerBox(page).fill('LeBron James')
   await chip(page, 'View', 'Averages').click()
@@ -976,6 +1009,37 @@ test.describe('layout at 1920x1080', () => {
 
 test.describe('layout at 1366x768', () => {
   test.use({ viewport: { width: 1366, height: 768 } })
+
+  test('a dropdown near the bottom floats over the page, fully on screen', async ({ page }) => {
+    const builder = page.getByRole('main')
+    const heightBefore = await builder.evaluate((el) => el.scrollHeight)
+    const box = page.getByRole('combobox', { name: 'Opponent' })
+    const list = page.getByRole('listbox', { name: 'Teams', exact: true })
+    // Scroll the builder so the Opponent box sits low in the window.
+    await builder.evaluate((el) => el.scrollTo(0, 0))
+    await page.getByRole('button', { name: 'Show all teams' }).click()
+    await expect(list).toBeVisible()
+
+    // The open list adds nothing to the builder column's scroll height.
+    expect(await builder.evaluate((el) => el.scrollHeight)).toBe(heightBefore)
+    // It is wholly inside the window and does not cover its own box.
+    const listBox = (await list.boundingBox())!
+    const inputBox = (await box.boundingBox())!
+    expect(listBox.y).toBeGreaterThanOrEqual(0)
+    expect(listBox.y + listBox.height).toBeLessThanOrEqual(768)
+    expect(listBox.y >= inputBox.y + inputBox.height || listBox.y + listBox.height <= inputBox.y).toBe(true)
+    expect(Math.round(listBox.x)).toBe(Math.round(inputBox.x))
+
+    // Scrolling the column moves the list with its box.
+    await builder.evaluate((el) => el.scrollBy(0, 60))
+    const moved = (await box.boundingBox())!
+    if (moved.y !== inputBox.y) {
+      await expect.poll(async () => Math.round((await list.boundingBox())!.y - listBox.y)).toBe(Math.round(moved.y - inputBox.y))
+    }
+    // Still a working list: a pick lands.
+    await list.getByRole('option', { name: 'Jazz' }).click()
+    await expect(box).toHaveValue('Jazz')
+  })
 
   test('two columns, nothing overlapping, clipped or scrolling sideways', async ({ page }) => {
     await page.evaluate(() => document.fonts.ready)

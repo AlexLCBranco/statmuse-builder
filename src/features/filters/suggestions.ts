@@ -11,7 +11,7 @@ export interface SuggestionItem {
   pick: () => void
 }
 
-/** A run of items, optionally under a heading ("Recent players"). */
+/** A run of items, optionally under a heading ('Recent players'). */
 export interface SuggestionGroup {
   label?: string
   items: SuggestionItem[]
@@ -28,17 +28,29 @@ export interface Recents {
   names: readonly string[]
   /** How a name is shown, when that differs from the name itself. */
   nameLabel?: (name: string) => string
+  /** Pinned searches of this mode, shown first (like the Recent column). */
+  pinned: readonly RecentSearch[]
   searches: readonly RecentSearch[]
   /** Picking a search loads the whole saved query. */
   onPickSearch: (query: QueryState) => void
 }
 
 /**
- * The two recent groups; a group with nothing in it is left out. Picking a
- * name fills only the box; picking a search loads the whole saved query.
+ * The pinned, names and recent groups; a group with nothing in it is left
+ * out. Picking a name fills only the box; picking a search loads the whole
+ * saved query.
  */
 export function recentGroups(recents: Recents, pickName: (name: string) => void, close: () => void): SuggestionGroup[] {
+  const searchItem = (prefix: string) => (entry: RecentSearch): SuggestionItem => ({
+    key: `${prefix}:${entry.question}`,
+    label: entry.question,
+    pick: () => {
+      recents.onPickSearch(entry.query)
+      close()
+    },
+  })
   const groups: SuggestionGroup[] = [
+    { label: 'Pinned searches', items: recents.pinned.map(searchItem('pinned')) },
     {
       label: recents.namesLabel,
       items: recents.names.map((name) => ({
@@ -47,17 +59,7 @@ export function recentGroups(recents: Recents, pickName: (name: string) => void,
         pick: () => pickName(name),
       })),
     },
-    {
-      label: 'Recent searches',
-      items: recents.searches.map((entry) => ({
-        key: `search:${entry.question}`,
-        label: entry.question,
-        pick: () => {
-          recents.onPickSearch(entry.query)
-          close()
-        },
-      })),
-    },
+    { label: 'Recent searches', items: recents.searches.map(searchItem('search')) },
   ]
   return groups.filter((group) => group.items.length > 0)
 }

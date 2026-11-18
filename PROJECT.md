@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-15, v0.15.0_
+_Last updated: 2026-11-18, v0.16.0_
 
 ## What it is
 
@@ -53,8 +53,18 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.15.0)
+## What works now (v0.16.0)
 
+- **Pinned searches in the empty box** (v0.16.0): focused and empty, the
+  Player and Team boxes list "Pinned searches" first (this mode's pins, max
+  5), then recent players/teams, then recent searches. Players and teams of
+  pinned searches count as recent names too. Rules: `boxRecents` in
+  `domain/recent.ts`
+- **Dropdowns float over the page** (v0.16.0): a suggestion list is
+  `position: fixed`, placed from its box (`SuggestionList`). It no longer
+  makes the builder column taller, follows its box while a column scrolls,
+  and opens upward when there is little room below (Opponent at 1366x768);
+  its height is capped to the room there
 - **Swap players** (v0.15.0): "⇄ Swap players" right after "Clear all"
   swaps the Player and Vs player boxes ("Luka Doncic stats vs Devin Booker"
   -> "Devin Booker stats vs Luka Doncic"); every other filter stays. Shown
@@ -110,8 +120,8 @@ Layers: `app -> features -> lib -> domain -> styles`
   row. Reset removes the key and puts the button rows (mode and view too)
   back at once, leaving the boxes alone. Rules in `domain/defaults.ts`
 - Live question preview (sentence + exact URL)
-- Player box with suggestions from 622 players on 2026-27 NBA rosters
-  (synced 2026-10-17 from ESPN's public roster API; `npm run sync:players`
+- Player box with suggestions from 528 players on 2026-27 NBA rosters
+  (synced 2026-11-18, after camp cuts; 622 in preseason; from ESPN's public roster API; `npm run sync:players`
   refreshes it); any typed name works. Arrow keys + Enter pick a suggestion;
   Enter with a player chosen sends the question
 - **Recents in the first box**: focused and empty, the player box lists
@@ -165,7 +175,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Dark theme only (the opt-in light theme was removed in v0.7.0)
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
-- Tests: 212 unit tests (domain + the version check), 51 Playwright e2e tests (one runs only in `e2e:prod`). `npm run check`
+- Tests: 215 unit tests (domain + the version check), 53 Playwright e2e tests (one runs only in `e2e:prod`). `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
 
@@ -281,8 +291,3 @@ This is a sample, not proof that every combination works.
 - At 1366x768 the filter rows do not all fit (the 48px+ targets need more
   height than that window has), so the builder column scrolls there; the
   last rows are below its fold until you scroll it.
-- A dropdown opened near the bottom of the builder column (Opponent, at
-  1366x768) extends that column's scroll area instead of floating over the
-  page edge.
-- The empty box's recent groups are built from Recent only; a pinned search
-  does not appear there.

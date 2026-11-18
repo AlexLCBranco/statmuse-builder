@@ -23,7 +23,7 @@ import {
   type QueryState,
   type View,
 } from '../../domain/query'
-import { recentPlayers, recentSearches, recentTeams, type RecentSearch } from '../../domain/recent'
+import { boxRecents, type Saved } from '../../domain/recent'
 import { ChipGroup } from './ChipGroup'
 import styles from './Filters.module.css'
 import { PlayerCombobox } from './PlayerCombobox'
@@ -36,8 +36,8 @@ interface Props {
   /** Swaps in a whole query (mode switch, row reset, a recent search). */
   onReplace: (query: QueryState) => void
   onSubmit: () => void
-  /** The saved Recent list, for the empty player/team box. */
-  recent: readonly RecentSearch[]
+  /** Recent and Pinned, for the empty player/team box. */
+  saved: Saved
   /** Shown at the right end of the mode/view line (the defaults gear). */
   corner?: ReactNode
 }
@@ -47,9 +47,10 @@ interface Props {
  * player (or team), then the filters this mode offers. Short filters share a
  * row so everything fits one desktop screen.
  */
-export function Filters({ query, onChange, onReplace, onSubmit, recent, corner }: Props) {
+export function Filters({ query, onChange, onReplace, onSubmit, saved, corner }: Props) {
   const leaders = isLeaders(query)
   const offers = (key: FilterKey) => offersFilter(query, key)
+  const box = boxRecents(saved, query.mode)
 
   // One filter: label, control, and a ✕ that shows only off the default.
   const filter = (key: FilterKey, label: string, control: ReactNode, htmlFor?: string) => (
@@ -119,9 +120,10 @@ export function Filters({ query, onChange, onReplace, onSubmit, recent, corner }
               toggleLabel="Show the team list"
               recents={{
                 namesLabel: 'Recent teams',
-                names: recentTeams(recent),
+                names: box.names,
                 nameLabel: (team) => (team === LEAGUE ? LEAGUE_OPTION.label : team),
-                searches: recentSearches(recent, 'leaders'),
+                pinned: box.pinned,
+                searches: box.searches,
                 onPickSearch: onReplace,
               }}
             />
@@ -146,8 +148,9 @@ export function Filters({ query, onChange, onReplace, onSubmit, recent, corner }
               hint={`Players (${PLAYERS_SEASON} rosters) or a team for team stats; any name you type works.`}
               recents={{
                 namesLabel: 'Recent players',
-                names: recentPlayers(recent),
-                searches: recentSearches(recent, 'player'),
+                names: box.names,
+                pinned: box.pinned,
+                searches: box.searches,
                 onPickSearch: onReplace,
               }}
             />
