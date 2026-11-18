@@ -14,7 +14,17 @@ export default defineConfig({
   fullyParallel: true,
   reporter: 'list',
   use: { baseURL, trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    // Desktop: every spec except the phone one.
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /phone.spec.ts/ },
+    // Phone (SM-1): a Pixel 7 with touch, at 390x844. Runs with the desktop
+    // project by default, locally and in `e2e:prod`.
+    {
+      name: 'phone',
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+      testMatch: /phone.spec.ts/,
+    },
+  ],
   webServer: local
     ? {
         // Test the production build, not the dev server: it's what Vercel serves.

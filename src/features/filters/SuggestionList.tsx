@@ -72,7 +72,8 @@ const MIN_BELOW = 240
 /**
  * Where the open list goes: under the box it belongs to (the list's parent),
  * or above it when the window has little room below. Follows the box while
- * any column scrolls or the window resizes. Gaps and the height cap stay in
+ * any column scrolls or the window resizes. "The window" is the visual
+ * viewport: on a phone that is the part above the on-screen keyboard. Gaps and the height cap stay in
  * CSS; this only passes the measured numbers in.
  */
 function useFloatingPlace(ref: RefObject<HTMLDivElement | null>, hidden: boolean): CSSProperties | undefined {
@@ -83,22 +84,31 @@ function useFloatingPlace(ref: RefObject<HTMLDivElement | null>, hidden: boolean
     if (hidden || !anchor) return
     function measure() {
       const box = anchor!.getBoundingClientRect()
-      const below = window.innerHeight - box.bottom
-      const up = below < MIN_BELOW && box.top > below
+      const view = window.visualViewport
+      const viewTop = view?.offsetTop ?? 0
+      const viewBottom = viewTop + (view?.height ?? window.innerHeight)
+      const below = viewBottom - box.bottom
+      const above = box.top - viewTop
+      const up = below < MIN_BELOW && above > below
       setPlace({
         left: box.left,
         width: box.width,
-        ...(up ? { top: 'auto', bottom: window.innerHeight - box.top } : { top: box.bottom }),
-        ['--room' as string]: `${Math.floor(up ? box.top : below)}px`,
+        ...(up ? { top: 'auto', bottom: document.documentElement.clientHeight - box.top } : { top: box.bottom }),
+        ['--room' as string]: `${Math.floor(up ? above : below)}px`,
       })
     }
     measure()
     // Capture: a scroll in any column (they don't bubble) moves the box.
     window.addEventListener('scroll', measure, true)
     window.addEventListener('resize', measure)
+    // The phone keyboard opening or closing resizes only the visual viewport.
+    window.visualViewport?.addEventListener('resize', measure)
+    window.visualViewport?.addEventListener('scroll', measure)
     return () => {
       window.removeEventListener('scroll', measure, true)
       window.removeEventListener('resize', measure)
+      window.visualViewport?.removeEventListener('resize', measure)
+      window.visualViewport?.removeEventListener('scroll', measure)
     }
   }, [ref, hidden])
 

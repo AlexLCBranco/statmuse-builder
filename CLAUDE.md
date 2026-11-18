@@ -15,6 +15,9 @@ learning frontend: keep code clean and explain decisions briefly.
 - **localStorage** only through `lib/storage.ts` (never throws).
 - `reference/statmuse-builder.html` is the original single-file build. Don't
   edit it; it's there to compare behaviour and look.
+- **Phone and desktop.** Every change must work at 390px (phone) and 1280px
+  (desktop), and the `phone` Playwright project (`e2e/phone.spec.ts`, Pixel 7
+  at 390x844 with touch) must pass along with the desktop one.
 - Bump `package.json`'s version with every app change (patch for fixes,
   minor for features); CI fails the push otherwise
   (`scripts/check-version.mjs`). The page shows it bottom-right. Update

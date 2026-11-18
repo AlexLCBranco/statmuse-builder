@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-18, v0.16.0_
+_Last updated: 2026-11-18, v0.17.0_
 
 ## What it is
 
@@ -53,8 +53,18 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.16.0)
+## What works now (v0.17.0)
 
+- **Phone-usable** (v0.17.0, SM-1): checked at 390x844 with touch by a
+  `phone` Playwright project (`e2e/phone.spec.ts`, runs by default next to
+  desktop, locally and in `e2e:prod`): no sideways scroll in any state
+  (screenshots saved as test artifacts), 44px+ tap targets, Ask on the first
+  screen, and a question built by tapping gives the same link as on desktop.
+  Tooltips that carry information open on a tap and close on a tap outside
+  (`features/tip/TapTip`): the version badge (commit, build time) and a ☆
+  when Pinned is full. The keyboard shrinks the page
+  (`interactive-widget=resizes-content`) and dropdowns measure the visual
+  viewport, so they stay above it. Desktop is unchanged
 - **Pinned searches in the empty box** (v0.16.0): focused and empty, the
   Player and Team boxes list "Pinned searches" first (this mode's pins, max
   5), then recent players/teams, then recent searches. Players and teams of
@@ -175,7 +185,7 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Dark theme only (the opt-in light theme was removed in v0.7.0)
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
-- Tests: 215 unit tests (domain + the version check), 53 Playwright e2e tests (one runs only in `e2e:prod`). `npm run check`
+- Tests: 215 unit tests (domain + the version check), 60 Playwright e2e tests (53 desktop, 7 phone) (one runs only in `e2e:prod`). `npm run check`
   runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
   live site
 

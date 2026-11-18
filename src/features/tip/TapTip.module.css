@@ -1,0 +1,35 @@
+/* The bubble is positioned against this box. */
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Out of the layout, and clear of the list and window edges the triggers
+   sit against. */
+.bubble {
+  position: absolute;
+  z-index: 7;
+  white-space: nowrap;
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--line-normal);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popover);
+}
+
+/* Left of the trigger, vertically centred (the Recent row buttons). */
+.left {
+  right: calc(100% + var(--space-2));
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Above the trigger, right edges aligned (the bottom-right version badge). */
+.above {
+  right: 0;
+  bottom: calc(100% + var(--space-1));
+}

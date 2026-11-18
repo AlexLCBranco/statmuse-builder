@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { QueryState } from '../../domain/query'
 import { canPin, MAX_PINNED, type RecentSearch, type Saved } from '../../domain/recent'
 import { statmuseUrl } from '../../domain/slug'
+import { TapTip } from '../tip/TapTip'
 import styles from './RecentList.module.css'
 
 interface Props {
@@ -67,16 +68,22 @@ export function RecentList({ saved, onEdit, onRemove, onPin, onUnpin }: Props) {
             row(
               entry,
               <>
-                <button
-                  type="button"
-                  className={styles.button}
-                  aria-label={`Pin “${entry.question}”`}
-                  aria-disabled={pinFull}
-                  title={pinFull ? `Pinned is full (${MAX_PINNED})` : 'Pin'}
-                  onClick={() => onPin(entry.question)}
-                >
-                  ☆
-                </button>
+                {/* Full: a tap says why nothing happens (phones have no hover). */}
+                <TapTip text={`Pinned is full (${MAX_PINNED})`}>
+                  {(toggle, tipId) => (
+                    <button
+                      type="button"
+                      className={styles.button}
+                      aria-label={`Pin “${entry.question}”`}
+                      aria-disabled={pinFull}
+                      aria-describedby={tipId}
+                      title={pinFull ? `Pinned is full (${MAX_PINNED})` : 'Pin'}
+                      onClick={() => (pinFull ? toggle() : onPin(entry.question))}
+                    >
+                      ☆
+                    </button>
+                  )}
+                </TapTip>
                 <button
                   type="button"
                   className={styles.button}

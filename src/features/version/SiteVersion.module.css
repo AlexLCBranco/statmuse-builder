@@ -2,10 +2,15 @@
    in the page's bottom padding, on top of nothing; while a long page scrolls,
    content passes under it, so it has the page colour behind it to stay
    readable. */
-.version {
+.corner {
   position: fixed;
   right: max(var(--space-2), env(safe-area-inset-right, 0px));
   bottom: max(var(--space-1), env(safe-area-inset-bottom, 0px));
+}
+
+/* A button only so a tap can show the tooltip; it looks like plain text. */
+.version {
+  border: 0;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   line-height: var(--line-normal);
