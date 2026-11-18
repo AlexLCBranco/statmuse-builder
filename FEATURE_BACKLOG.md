@@ -30,3 +30,7 @@ Wanted, at widths < 768px:
 - Build a full question on the phone project by tapping (player via autocomplete, filters) and assert the generated
   StatMuse URL equals the desktop result for the same inputs.
 - Desktop e2e suite still passes unchanged.
+
+### SM-3 — Back-to-back preset
+**What:** a one-click preset that adds a back-to-back condition to the question: "2nd night of a back-to-back" (main one) and "1st night of a back-to-back". Step 1, then stop and report: test on StatMuse which phrasing it actually understands (e.g. "on the second night of a back-to-back", "on back-to-backs") and whether it works for players and teams; build only phrasings that return the right games. Must work on desktop and phone (SM-1 rules).
+**Tests:** unit: the preset adds the verified phrasing to the generated question/URL; e2e: clicking the preset updates the preview; one live check that StatMuse answers the generated URL.
