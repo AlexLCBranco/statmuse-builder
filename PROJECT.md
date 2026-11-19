@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-18, v0.18.0_
+_Last updated: 2026-11-18, v0.18.1_
 
 ## What it is
 
@@ -201,8 +201,12 @@ Layers: `app -> features -> lib -> domain -> styles`
   403 for several minutes). On the Hobby plan it cannot be bypassed (System
   Bypass needs Pro, and a custom firewall rule does not skip it), so the
   tests send less: `e2e/test.ts` caches the hashed `/assets/*` files per
-  worker, and live runs use 2 workers. `npx vercel firewall overview` shows
-  challenged requests
+  worker, and live runs use 2 workers. That was not enough (the IP got a
+  ~20 min "persistent challenge" after ~30 tests), so `npm run e2e:prod`
+  (`scripts/e2e-prod.mjs`) pauses the mitigation for the run and resumes it
+  after, also on failure or Ctrl+C. Vercel only allows the pause from a
+  person in a terminal (it refuses agents), so Claude's runs go unpaused.
+  `npx vercel firewall overview` shows challenged requests
 
 ## StatMuse compatibility
 

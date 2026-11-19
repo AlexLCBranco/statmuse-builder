@@ -33,6 +33,12 @@ learning frontend: keep code clean and explain decisions briefly.
 5. `npm run wait-live` waits until the live `/version.json` shows the new
    version; tell the owner that number. Then `npm run e2e:prod` runs the e2e
    suite against the live site.
+   A full run trips Vercel's DDoS mitigation (HTTP 403 "Security
+   Checkpoint"). In a terminal the script pauses it (the owner confirms
+   Vercel's prompt) and resumes it after; Vercel refuses that to agents, so
+   Claude's runs go unpaused. If Claude's run hits the 403, say so and ask the
+   owner to run `npm run e2e:prod` in a terminal. Never try to get around the
+   checkpoint or the prompt.
 
 ## Git and deploy
 

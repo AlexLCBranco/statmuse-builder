@@ -1,7 +1,7 @@
 {
   "name": "statmuse-builder",
   "private": true,
-  "version": "0.18.0",
+  "version": "0.18.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "e2e": "playwright test",
-    "e2e:prod": "cross-env BASE_URL=https://statmuse-builder.vercel.app playwright test",
+    "e2e:prod": "node scripts/e2e-prod.mjs",
     "sync:players": "node scripts/sync-players.mjs",
     "check": "npm run lint && npm run typecheck && npm run test && npm run e2e",
     "check-version": "node scripts/check-version.mjs",
@@ -27,7 +27,6 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
-    "cross-env": "^10.1.0",
     "oxlint": "^1.88.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.4",

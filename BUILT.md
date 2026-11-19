@@ -12,6 +12,9 @@ spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Featu
 - Pinned searches in the empty box; dropdowns float over the page; player list re-synced (v0.16.0)
   Pinned searches show first in an empty Player or Team box, and the Opponent dropdown no longer stretches the column.
 
+### Internal
+- Live e2e runs pause Vercel's DDoS mitigation (you confirm) and resume it after (v0.18.1)
+
 ## 2026-11-15
 - Swap players button; teams in the Player box (v0.15.0)
 - Rotations button: open the player or team on rotationkit (v0.14.0)
