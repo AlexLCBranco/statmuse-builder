@@ -8,6 +8,7 @@ import { rotationsLink } from '../../domain/rotations'
 import { statmuseUrl } from '../../domain/slug'
 import { copyText, selectContents } from '../../lib/clipboard'
 import { BioLine } from '../bio/BioLine'
+import { SiteLinks } from '../sites/SiteLinks'
 import styles from './QuestionCard.module.css'
 
 interface Props {
@@ -147,6 +148,7 @@ export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear, 
         {/* key: a new player starts with the details closed. */}
         {bioName && <BioLine key={bioName} name={bioName} />}
       </div>
+      <SiteLinks query={query} />
       {/* In the card's top corner, out of the layout: it never moves a button. */}
       <span className={styles.toast} role="status">
         {toast}

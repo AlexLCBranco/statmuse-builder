@@ -353,3 +353,32 @@ test('the background line fits and works by tap', async ({ page }, testInfo) => 
   await more.tap()
   await expect(details).toHaveCount(0)
 })
+
+// ---- SM-5: the "Other sites" buttons on a phone ----
+
+test('the other-sites buttons fit, are finger-sized, and open in a new tab', async ({ page, context }, testInfo) => {
+  await context.route(/espn\.com|basketball-reference\.com|craftednba\.com/, (route) => route.fulfill({ contentType: 'text/html', body: '<title>stub</title>' }))
+  await playerBox(page).fill('Shai Gilgeous-Alexander')
+  await playerBox(page).blur()
+  const sites = page.getByRole('group', { name: 'Other sites', exact: true })
+  await expect(sites.getByRole('link')).toHaveCount(3)
+  await sites.scrollIntoViewIfNeeded()
+  await expectFits(page, testInfo, 'other-sites')
+  for (const link of await sites.getByRole('link').all()) {
+    const box = (await link.boundingBox())!
+    expect(box.height).toBeGreaterThanOrEqual(44)
+    expect(box.width).toBeGreaterThanOrEqual(44)
+  }
+  // A tap opens the site in a new tab; this page stays.
+  const popup = page.waitForEvent('popup')
+  await page.getByTestId('site-espn').tap()
+  expect((await popup).url()).toMatch(/^https:\/\/www\.espn\.com\/nba\/player\/splits\/_\/id\/\d+$/)
+  await expect(page.getByTestId('question')).toHaveText('Shai Gilgeous-Alexander stats')
+
+  // A team: two buttons.
+  await place(page, 'Team leaders').tap()
+  await page.getByRole('button', { name: 'Show the team list' }).tap()
+  await page.getByRole('listbox', { name: 'Leader teams' }).getByRole('option', { name: 'Trail Blazers' }).tap()
+  await expect(sites.getByRole('link')).toHaveText(['ESPNWhole team↗', 'Basketball-ReferenceTeam season↗'])
+  await expectFits(page, testInfo, 'other-sites-team')
+})

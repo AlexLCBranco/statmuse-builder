@@ -5,6 +5,8 @@ Entries dated before 2026-11-16 were backfilled from the git commit messages (da
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
 ## 2026-11-20
+- SM-5 — Links to other stats sites, not only StatMuse (v0.21.0)
+  Under the question, an "Other sites" row opens the same player, team or league on ESPN (every split, or every game, in one table), Basketball-Reference (the whole career, a team's season, the league leaders) and CraftedNBA (shot chart and skill ratings).
 - SM-4 — Draft, college and hometown next to Rotations (v0.20.0)
   With a player picked, a short line beside "Rotations ↗" shows where he was drafted, his college and where he is from ("Draft 2023, pick 1 (SAS) · No US college · France"), with links to that whole draft and to his college team; hover it (or tap the ⓘ) for the full details.
 - SM-6 — Shared layout: pinned header menu, chips instead of dropdowns (v0.19.0)

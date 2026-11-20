@@ -972,7 +972,7 @@ test.describe('layout at 1920x1080', () => {
     await expect(page.getByTestId('rotations')).toHaveText('Giannis Antetokounmpo rotations ↗')
     await expect(page.getByRole('button', { name: 'Swap players' })).toBeVisible()
     // The buttons; the background line (SM-4) takes the room left, or its own line.
-    const buttons = page.getByRole('region', { name: 'Your question' }).locator(':is(a, button):not([data-testid="bio"] *)')
+    const buttons = page.getByRole('region', { name: 'Your question' }).locator(':is(a, button):not([data-testid="bio"] *, [data-testid="sites"] *)')
     const tops = new Set<number>()
     for (const box of await buttons.all()) tops.add(Math.round((await box.boundingBox())!.y))
     expect(tops.size).toBe(1)

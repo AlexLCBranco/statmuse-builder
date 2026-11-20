@@ -32,6 +32,10 @@ export interface Bio {
   draft?: { year: number; round: number; pick: number; team?: string; teamName?: string }
   /** US colleges in the order he played for them. Missing: none. */
   colleges?: BioCollege[]
+  /** His id on ESPN, for links to his pages there (SM-5). */
+  espn?: string
+  /** His page's name on CraftedNBA; missing: the site has no page for him (SM-5). */
+  crafted?: string
 }
 
 /**
