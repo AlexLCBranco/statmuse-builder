@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-20, v0.23.0_
+_Last updated: 2026-11-20, v0.23.1_
 
 ## What it is
 
@@ -68,7 +68,14 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.23.0)
+## What works now (v0.23.1)
+
+- **Tests name a missing site file** (v0.23.1, tests only): every e2e test
+  fails with a plain message when the site does not serve one of its built
+  files (`e2e/test.ts`, `watchAssets`). Found 2026-11-20: seconds after a
+  deploy the live stylesheet did not arrive once, and a test failed on a
+  position instead (an unstyled page puts the background line at x = 8).
+  `npm run e2e:prod` now tries a failed test once more
 
 - **One-line header** (v0.22.0, v0.23.0): the breadcrumb, the "Go anywhere"
   search (Ctrl+K) and the header's own back / forward arrows are removed; the owner found them unnecessary on a site

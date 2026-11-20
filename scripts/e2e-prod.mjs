@@ -14,7 +14,10 @@
 // - one or two per feature: enough to see that the deployed build works,
 //   on desktop and on the phone.
 //
-// One browser at a time, so the requests are spread out. The full suite
+// One browser at a time, so the requests are spread out. A failed test is
+// tried once more (it is then reported as "flaky", with why it failed the
+// first time): seconds after a deploy the site has once not served its
+// stylesheet (2026-11-20). The full suite
 // still runs on the same production build locally (`npm run check`) and in
 // CI. No prompt, no Vercel CLI: Claude can run this too.
 //
@@ -29,7 +32,7 @@ const args = process.argv.slice(2)
 const all = args.includes('--all')
 const extra = args.filter((arg) => arg !== '--all')
 // One plain word: on Windows the arguments pass through a shell.
-const subset = all ? [] : ['--grep=@live', '--workers=1']
+const subset = all ? [] : ['--grep=@live', '--workers=1', '--retries=1']
 if (all) console.warn('e2e-prod: --all runs the whole suite; Vercel will probably answer 403 partway through')
 
 const tests = spawn('npx', ['playwright', 'test', ...subset, ...extra], {

@@ -17,6 +17,7 @@ spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Featu
   A header that stays at the top (back / forward, a breadcrumb whose parts jump to their neighbours, "Go anywhere" search on Ctrl+K, the gear) with the two places under it (Player · Team leaders); every choice is now in the address bar, so a reload or a shared link shows the same screen.
 
 ### Internal
+- Tests now say so when the site does not serve one of its files (stylesheet, script), and the live run retries a failed test once (v0.23.1)
 - Live test run is now a small set (13 tests, about a minute, no prompt): pausing Vercel's protection needs the Pro plan (v0.21.0)
 
 ## 2026-11-18

@@ -27,11 +27,37 @@ export async function cacheAssets(context: BrowserContext): Promise<void> {
   })
 }
 
+/**
+ * Watches for a built file (`/assets/...`: the page's script, its stylesheet,
+ * the player backgrounds) that the site did not serve. Without its
+ * stylesheet the page still "works", so a test would go on and fail much
+ * later on a position, with a message that says nothing about the cause
+ * (seen once on the live site, 2026-11-20, seconds after a deploy).
+ * Returns the list of what went wrong, filled in as the test runs.
+ */
+export function watchAssets(context: BrowserContext): string[] {
+  const missing: string[] = []
+  const isAsset = (url: string) => new URL(url).pathname.startsWith('/assets/')
+  context.on('response', (response) => {
+    if (isAsset(response.url()) && response.status() >= 400) missing.push(`${response.url()} (HTTP ${response.status()})`)
+  })
+  context.on('requestfailed', (request) => {
+    const why = request.failure()?.errorText ?? 'failed'
+    // ERR_ABORTED: the page moved on (a reload, a new address) before the file arrived. Not a fault.
+    if (isAsset(request.url()) && why !== 'net::ERR_ABORTED') missing.push(`${request.url()} (${why})`)
+  })
+  return missing
+}
+
 export const test = base.extend({
   // Playwright calls the second argument `use`; renamed so the React hooks lint leaves it alone.
   context: async ({ context }, provide) => {
     await cacheAssets(context)
+    const missing = watchAssets(context)
     await provide(context)
+    if (missing.length > 0) {
+      throw new Error(`The site did not serve a file the page needs, so this test's result means nothing: ${missing.join(', ')}. If it is HTTP 403, wait until the site answers 200 and run again.`)
+    }
   },
 })
 
