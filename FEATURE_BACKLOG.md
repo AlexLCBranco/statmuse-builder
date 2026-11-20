@@ -5,14 +5,6 @@ Specs are written here from Claude chat. Item IDs are SM-1, SM-2, ... (never reu
 
 ## Ready
 
-### SM-6 — Shared layout: pinned header menu, chips instead of dropdowns
-**In short:** statmuse-builder gets the shared layout every app now uses: a header always at the top (back/forward, breadcrumb, main places, "Go anywhere" search), and under it "What" chips and a "How" switch, so nothing is hidden in dropdowns.
-**What:**
-- Follow [NAV_PATTERN.md](https://github.com/AlexLCBranco/backlogkit/blob/main/NAV_PATTERN.md) exactly (read it first; it is the spec). Same look as footykit FK-65 so the apps read as one site; if FK-65 has shipped, copy its header styles rather than re-designing.
-- Used on the phone: the 390 px rules in section 4 are a must. Pick the Where tabs from the app's real pages (at most 5); flag in the report how you mapped them.
-- Replace every `<select>` used to pick what's shown with chips/strips. Every state in the URL; old URLs keep working.
-**Tests:** as in NAV_PATTERN.md section 6.
-
 ### SM-4 — Draft, college and hometown next to Rotations
 **In short:** In Player mode, next to the "Rotations ↗" button, a short line shows the player's draft spot, college and where he's from, with links to his full draft and his college team's roster.
 **What:**

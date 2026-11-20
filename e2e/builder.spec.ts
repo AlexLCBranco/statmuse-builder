@@ -19,6 +19,8 @@ const askLink = (page: Page) => page.getByRole('link', { name: /Ask StatMuse/ })
 const recent = (page: Page) => page.getByTestId('recent')
 const pinned = (page: Page) => page.getByTestId('pinned')
 const group = (page: Page, name: string) => page.getByRole('group', { name, exact: true })
+/** A place tab in the header (Player, Team leaders). */
+const place = (page: Page, name: string) => page.getByTestId('where-tabs').getByRole('button', { name, exact: true })
 const chip = (page: Page, groupName: string, name: string) => group(page, groupName).getByRole('button', { name, exact: true })
 const playerBox = (page: Page) => page.getByRole('combobox', { name: 'Player', exact: true })
 const teamBox = (page: Page) => page.getByRole('combobox', { name: 'Team', exact: true })
@@ -41,10 +43,10 @@ interface SeedEntry {
   query: Record<string, string>
 }
 
-/** Puts searches straight into Recent, the way the app saves them, then reloads. */
+/** Puts searches straight into Recent, the way the app saves them, then opens the start page again. */
 async function seedRecent(page: Page, entries: SeedEntry[]) {
   await page.evaluate((list) => localStorage.setItem('smb.recent', JSON.stringify(list)), entries)
-  await page.reload()
+  await page.goto('/')
 }
 
 const SEEDED: SeedEntry[] = [
@@ -70,8 +72,8 @@ test('starts empty: no player, All stats, every filter on Any', async ({ page })
   await expect(playerBox(page)).toHaveValue('')
   await expect(question(page)).toHaveText('Pick a player stats')
   await expect(askLink(page)).toHaveAttribute('aria-disabled', 'true')
-  await expect(chip(page, 'Mode', 'Player')).toHaveAttribute('aria-pressed', 'true')
-  await expect(chip(page, 'View', 'Averages')).toHaveAttribute('aria-pressed', 'true')
+  await expect(place(page, 'Player')).toHaveAttribute('aria-current', 'page')
+  await expect(chip(page, 'How', 'Averages')).toHaveAttribute('aria-pressed', 'true')
   await expect(chip(page, 'Stat', 'All stats')).toHaveAttribute('aria-pressed', 'true')
   await expect(chip(page, 'Quarter', 'Full game')).toHaveAttribute('aria-pressed', 'true')
   for (const name of ['Court', 'Result', 'Period']) {
@@ -125,8 +127,8 @@ test('builds a question from a picked player and chips, then saves it to Recent 
   await expect(recent(page).getByRole('link')).toHaveText([careerQuestion])
   await expect(recent(page).getByRole('link')).toHaveAttribute('href', careerUrl)
 
-  // Recent survives a reload (localStorage)...
-  await page.reload()
+  // Recent survives a fresh visit (localStorage)...
+  await page.goto('/')
   await expect(recent(page).getByRole('link')).toHaveText([careerQuestion])
   await expect(question(page)).toHaveText('Pick a player stats')
   // ...Edit loads it back into the builder...
@@ -284,9 +286,9 @@ test('Swap players: shows only with both players, swaps them, keeps the filters'
   expect(await ask(page)).toBe(`${ASK}devin-booker-points-vs-luka-doncic-in-wins-career`)
 
   // Never in Team leaders mode, even though both values are kept.
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await expect(swapButton(page)).toHaveCount(0)
-  await chip(page, 'Mode', 'Player').click()
+  await place(page, 'Player').click()
   await expect(swapButton(page)).toBeVisible()
 
   // Emptying either box hides it again.
@@ -330,7 +332,7 @@ test('a team in the Player box: team stats with every filter', async ({ page }) 
   await expect(question(page)).toHaveText('trail blazers stats without Anthony Edwards this season')
 
   // Team leaders mode is unchanged: the team's top players.
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await teamBox(page).fill('Timberwolves')
   await teamBox(page).press('Enter')
   await expect(question(page)).toHaveText('Timberwolves points leaders this season')
@@ -345,7 +347,7 @@ test('team leaders mode: builds a leaders question and sends it', async ({ page 
   await page.getByRole('combobox', { name: 'Vs player' }).fill('LeBron James')
   await expect(question(page)).toHaveText('Jayson Tatum stats in the 4th quarter vs LeBron James in wins last 10 games')
 
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   // "All stats" became points; no team yet, so nothing can be sent.
   await expect(question(page)).toHaveText('Pick a team points leaders in the 4th quarter in wins last 10 games')
   await expect(askLink(page)).toHaveAttribute('aria-disabled', 'true')
@@ -355,7 +357,7 @@ test('team leaders mode: builds a leaders question and sends it', async ({ page 
   await expect(chip(page, 'Stat', 'All stats')).toHaveCount(0)
   await expect(chip(page, 'Stat', 'Turnovers')).toHaveCount(0)
   await expect(chip(page, 'Stat', 'Minutes')).toBeVisible()
-  await expect(group(page, 'View')).toHaveCount(0)
+  await expect(group(page, 'How')).toHaveCount(0)
   await expect(playerBox(page)).toHaveCount(0)
   await expect(page.getByRole('combobox', { name: 'Vs player' })).toHaveCount(0)
   await expect(page.getByRole('combobox', { name: 'Without' })).toHaveCount(0)
@@ -394,24 +396,24 @@ test('team leaders mode: builds a leaders question and sends it', async ({ page 
   await expect(recent(page).getByRole('link')).toHaveAttribute('href', leadersUrl)
 
   // Each mode remembers its own player/team, and the hidden filter comes back.
-  await chip(page, 'Mode', 'Player').click()
+  await place(page, 'Player').click()
   await expect(playerBox(page)).toHaveValue('Jayson Tatum')
   await expect(page.getByRole('combobox', { name: 'Vs player' })).toHaveValue('LeBron James')
   await expect(question(page)).toHaveText('Jayson Tatum rebounds at home vs Warriors vs LeBron James last season')
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await expect(teamBox(page)).toHaveValue('Celtics')
 
   // Edit from Recent restores a leaders question, mode included.
   await page.getByRole('button', { name: 'Clear all' }).click()
   await expect(question(page)).toHaveText('Pick a team points leaders')
-  await chip(page, 'Mode', 'Player').click()
+  await place(page, 'Player').click()
   await recent(page).getByRole('button', { name: 'Edit' }).click()
-  await expect(chip(page, 'Mode', 'Team leaders')).toHaveAttribute('aria-pressed', 'true')
+  await expect(place(page, 'Team leaders')).toHaveAttribute('aria-current', 'page')
   await expect(question(page)).toHaveText(leadersQuestion)
 })
 
 test('league leaders: "NBA ... leaders", without "last N games"', async ({ page }) => {
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await chip(page, 'Period', 'Last 10').click()
   const team = teamBox(page)
   await team.fill('nba')
@@ -449,11 +451,11 @@ test('rotations button: the same player or team on rotationkit', async ({ page }
   await expect(rotations(page)).toHaveAttribute('aria-disabled', 'false')
 
   // Game by game: the same link.
-  await chip(page, 'View', 'Game by game').click()
+  await chip(page, 'How', 'Game by game').click()
   await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/player?name=De'Aaron%20Fox`)
 
   // Team leaders: disabled until a team is picked, then the team's tricode.
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await expect(rotations(page)).toHaveText('Rotations ↗')
   await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
   await teamBox(page).fill('orlando')
@@ -506,9 +508,9 @@ test('back-to-back preset: one click adds "on the second night of a back to back
 
   // Leaders and the game log take it too.
   await b2b.click()
-  await chip(page, 'View', 'Game by game').click()
+  await chip(page, 'How', 'Game by game').click()
   await expect(question(page)).toHaveText('Jayson Tatum points game log on the second night of a back to back in wins')
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await teamBox(page).fill('lakers')
   await teamBox(page).press('Enter')
   await expect(question(page)).toHaveText('Lakers points leaders on the second night of a back to back in wins')
@@ -540,7 +542,7 @@ test('game by game view: "game log", with every option averages has', async ({ p
   // The same rows and chips in both views.
   const statChips = await group(page, 'Stat').getByRole('button').allTextContents()
   const periodChips = await group(page, 'Period').getByRole('button').allTextContents()
-  await chip(page, 'View', 'Game by game').click()
+  await chip(page, 'How', 'Game by game').click()
   await expect(group(page, 'Stat').getByRole('button')).toHaveText(statChips)
   await expect(group(page, 'Period').getByRole('button')).toHaveText(periodChips)
   await expect(group(page, 'Court')).toHaveCount(1)
@@ -564,12 +566,12 @@ test('game by game view: "game log", with every option averages has', async ({ p
   await expect(recent(page).getByRole('link')).toHaveText(['LeBron James game log in the 4th quarter career'])
 
   // Back to averages: the same filters, as an average.
-  await chip(page, 'View', 'Averages').click()
+  await chip(page, 'How', 'Averages').click()
   await expect(question(page)).toHaveText('LeBron James stats in the 4th quarter career')
 
   // The view switch is hidden in leaders mode.
-  await chip(page, 'Mode', 'Team leaders').click()
-  await expect(group(page, 'View')).toHaveCount(0)
+  await place(page, 'Team leaders').click()
+  await expect(group(page, 'How')).toHaveCount(0)
 })
 
 test('empty player box: recent players and recent searches', async ({ page }) => {
@@ -626,13 +628,13 @@ test('empty player box: recent players and recent searches', async ({ page }) =>
   // A recent game log search switches the view as well.
   await player.fill('')
   await searches.nth(2).click()
-  await expect(chip(page, 'View', 'Game by game')).toHaveAttribute('aria-pressed', 'true')
+  await expect(chip(page, 'How', 'Game by game')).toHaveAttribute('aria-pressed', 'true')
   await expect(question(page)).toHaveText('Nikola Jokic game log last 5 games')
 })
 
 test('empty team box: recent teams and recent leaders searches', async ({ page }) => {
   await seedRecent(page, SEEDED)
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await chip(page, 'Stat', 'Blocks').click()
   const team = teamBox(page)
   const teams = teamList(page).getByRole('group', { name: 'Recent teams' }).getByRole('option')
@@ -667,7 +669,7 @@ test('empty team box: recent teams and recent leaders searches', async ({ page }
 test('empty boxes list pinned searches first, and their players and teams', async ({ page }) => {
   // Everything pinned, nothing in Recent: the box used to show nothing.
   await page.evaluate((list) => localStorage.setItem('smb.pinned', JSON.stringify(list)), SEEDED)
-  await page.reload()
+  await page.goto('/')
   const player = playerBox(page)
   const pinned = playerList(page).getByRole('group', { name: 'Pinned searches' }).getByRole('option')
 
@@ -688,7 +690,7 @@ test('empty boxes list pinned searches first, and their players and teams', asyn
   await player.press('Enter')
   await expect(question(page)).toHaveText('Stephen Curry three pointers made at home in wins last 5 games')
 
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   const team = teamBox(page)
   await team.click()
   await expect(teamList(page).getByRole('group', { name: 'Pinned searches' }).getByRole('option')).toHaveText([
@@ -699,7 +701,7 @@ test('empty boxes list pinned searches first, and their players and teams', asyn
 
 test('Clear all and the per-row ✕', async ({ page }) => {
   await playerBox(page).fill('LeBron James')
-  await chip(page, 'View', 'Averages').click()
+  await chip(page, 'How', 'Averages').click()
   await chip(page, 'Stat', 'Points').click()
   await chip(page, 'Quarter', 'Q4').click()
   await chip(page, 'Court', 'Home').click()
@@ -729,19 +731,19 @@ test('Clear all and the per-row ✕', async ({ page }) => {
   await expect(question(page)).toHaveText('LeBron James stats in the 4th quarter in losses')
 
   // Clear all keeps mode and view, resets the rest, and focuses the first box.
-  await chip(page, 'View', 'Game by game').click()
+  await chip(page, 'How', 'Game by game').click()
   await page.getByRole('button', { name: 'Clear all' }).click()
   await expect(question(page)).toHaveText('Pick a player game log')
-  await expect(chip(page, 'View', 'Game by game')).toHaveAttribute('aria-pressed', 'true')
+  await expect(chip(page, 'How', 'Game by game')).toHaveAttribute('aria-pressed', 'true')
   await expect(playerBox(page)).toBeFocused()
   await expect(page.getByRole('button', { name: /^Reset / })).toHaveCount(0)
 
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await teamBox(page).fill('lakers')
   await teamBox(page).press('Enter')
   await chip(page, 'Result', 'Wins').click()
   await page.getByRole('button', { name: 'Clear all' }).click()
-  await expect(chip(page, 'Mode', 'Team leaders')).toHaveAttribute('aria-pressed', 'true')
+  await expect(place(page, 'Team leaders')).toHaveAttribute('aria-current', 'page')
   await expect(question(page)).toHaveText('Pick a team points leaders')
   await expect(teamBox(page)).toBeFocused()
 })
@@ -757,7 +759,7 @@ test('pinned favorites: pin survives a reload, unpin returns it to Recent', asyn
   await expect(recent(page).getByRole('link', { name: first })).toHaveCount(0)
 
   // Saved in localStorage.
-  await page.reload()
+  await page.goto('/')
   await expect(pinned(page).getByRole('link')).toHaveText([first])
   await expect(pinned(page).getByRole('link')).toHaveAttribute('href', `${ASK}stephen-curry-three-pointers-made-at-home-in-wins-last-5-games`)
 
@@ -778,7 +780,7 @@ test('pinned favorites: pin survives a reload, unpin returns it to Recent', asyn
   await pinned(page).getByRole('button', { name: `Unpin “${first}”` }).click()
   await expect(pinned(page)).toHaveCount(0)
   await expect(recent(page).getByRole('link').first()).toHaveText(first)
-  await page.reload()
+  await page.goto('/')
   await expect(pinned(page)).toHaveCount(0)
 })
 
@@ -849,8 +851,8 @@ test('Recent entries saved by v0.6 (no mode, team or view) still load', async ({
   await expect(recent(page).getByRole('link')).toHaveText(['LeBron James stats last 10 games'])
   await recent(page).getByRole('button', { name: 'Edit' }).click()
   await expect(question(page)).toHaveText('LeBron James stats last 10 games')
-  await expect(chip(page, 'Mode', 'Player')).toHaveAttribute('aria-pressed', 'true')
-  await expect(chip(page, 'View', 'Averages')).toHaveAttribute('aria-pressed', 'true')
+  await expect(place(page, 'Player')).toHaveAttribute('aria-current', 'page')
+  await expect(chip(page, 'How', 'Averages')).toHaveAttribute('aria-pressed', 'true')
   await playerBox(page).fill('')
   await expect(playerList(page).getByRole('group', { name: 'Recent players' }).getByRole('option')).toHaveText(['LeBron James'])
 })
@@ -884,9 +886,15 @@ async function expectCleanLayout(page: Page) {
       if (box.scrollWidth > box.clientWidth) found.push(`horizontal scroll in ${box.tagName}: ${box.scrollWidth} > ${box.clientWidth}`)
     }
     const name = (el: Element) => el.getAttribute('aria-label') || el.textContent?.trim() || el.id || el.tagName
+    // Only what is on screen: a control scrolled out of its column is cut off there, not overlapping.
+    const onScreen = (el: Element) => {
+      const r = el.getBoundingClientRect()
+      const scroller = el.closest('main, aside ul')?.getBoundingClientRect()
+      return !scroller || (r.bottom > scroller.top + 1 && r.top < scroller.bottom - 1)
+    }
     const controls = [...document.querySelectorAll('button, a, input')].filter((el) => {
       const box = el.getBoundingClientRect()
-      return box.width > 0 && box.height > 0 && !/^Show /.test(el.getAttribute('aria-label') ?? '')
+      return box.width > 0 && box.height > 0 && !/^Show /.test(el.getAttribute('aria-label') ?? '') && onScreen(el)
     })
     for (const el of controls) {
       if (el.tagName !== 'INPUT' && (el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)) {
@@ -940,7 +948,7 @@ test.describe('layout at 1920x1080', () => {
     await page.evaluate(() => document.fonts.ready)
     await seedRecent(page, SEEDED)
     await fillEverything(page)
-    for (const name of ['Mode', 'View', 'Stat', 'Quarter', 'Court', 'Result', 'Period']) {
+    for (const name of ['How', 'Stat', 'Quarter', 'Court', 'Result', 'Period']) {
       expect(await chipLines(page, name), name).toBe(1)
     }
     await expectCleanLayout(page)
@@ -949,7 +957,7 @@ test.describe('layout at 1920x1080', () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(0)
     expect(last.y + last.height).toBeLessThanOrEqual(1080)
 
-    await chip(page, 'Mode', 'Team leaders').click()
+    await place(page, 'Team leaders').click()
     for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period']) expect(await chipLines(page, name), name).toBe(1)
     await expectCleanLayout(page)
   })
@@ -975,7 +983,7 @@ test.describe('layout at 1920x1080', () => {
     await recent(page).getByRole('button', { name: /^Pin / }).first().click()
 
     // Chips and segmented toggles: 48px tall, 17px text.
-    for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period', 'Mode', 'View']) {
+    for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period', 'How']) {
       for (const button of await group(page, name).getByRole('button').all()) {
         const { height, fontSize } = await measure(button)
         expect(height, name).toBeGreaterThanOrEqual(48)
@@ -1094,10 +1102,10 @@ test.describe('layout at 1366x768', () => {
 
     await fillEverything(page)
     await expectCleanLayout(page)
-    await chip(page, 'Mode', 'Team leaders').click()
+    await place(page, 'Team leaders').click()
     await expectCleanLayout(page)
-    await chip(page, 'Mode', 'Player').click()
-    await chip(page, 'View', 'Game by game').click()
+    await place(page, 'Player').click()
+    await chip(page, 'How', 'Game by game').click()
     await expectCleanLayout(page)
   })
 })
@@ -1115,7 +1123,7 @@ async function seedLongLists(page: Page) {
     },
     [Array.from({ length: 12 }, (_, i) => entry(i, 'recent')), Array.from({ length: 6 }, (_, i) => entry(i, 'pinned'))],
   )
-  await page.reload()
+  await page.goto('/')
 }
 
 /** The page has no scrollbar in either direction, and has not moved. */
@@ -1264,7 +1272,7 @@ test('fits a 375px phone screen without sideways scrolling', async ({ page }) =>
   expect(await overflow()).toBeLessThanOrEqual(0)
   await ask(page)
   expect(await overflow()).toBeLessThanOrEqual(0)
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   expect(await overflow()).toBeLessThanOrEqual(0)
 })
 
@@ -1293,9 +1301,11 @@ test('a pressed chip or switch is an orange tint with an accent edge, not white'
   // "Any" when on: the same edge and text, but no fill.
   expect(await look(chip(page, 'Court', 'Any'))).toMatchObject({ background: 'rgba(0, 0, 0, 0)', color: INK, border: ACCENT })
 
-  const player = await look(chip(page, 'Mode', 'Player'))
-  expect(player).toMatchObject({ background: TINT, color: INK })
-  expect(player.shadow).toContain(ACCENT)
+  const view = await look(chip(page, 'How', 'Averages'))
+  expect(view).toMatchObject({ background: TINT, color: INK })
+  expect(view.shadow).toContain(ACCENT)
+  // The current place in the header: an accent line under it, not a fill.
+  expect(await place(page, 'Player').evaluate((el) => getComputedStyle(el).borderBottomColor)).toBe(ACCENT)
 })
 
 test('suggests 2026-27 rookies from the synced roster list', async ({ page }) => {

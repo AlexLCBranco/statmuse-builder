@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs'
+
 import { cacheAssets, devices, expect, test, type Browser, type Page, type TestInfo } from './test.js'
 
 /**
@@ -16,6 +18,8 @@ test.beforeEach(async ({ context, page }) => {
 })
 
 const group = (page: Page, name: string) => page.getByRole('group', { name, exact: true })
+/** A place tab in the header (Player, Team leaders). */
+const place = (page: Page, name: string) => page.getByTestId('where-tabs').getByRole('button', { name, exact: true })
 const chip = (page: Page, groupName: string, name: string) => group(page, groupName).getByRole('button', { name, exact: true })
 const playerBox = (page: Page) => page.getByRole('combobox', { name: 'Player', exact: true })
 const playerList = (page: Page) => page.getByRole('listbox', { name: 'Players and teams', exact: true })
@@ -152,7 +156,7 @@ test('tooltips with information open on tap and close on a tap outside', async (
   const tip = page.getByRole('tooltip')
   await expect(tip).toHaveText(/^Version \d+\.\d+\.\d+ · commit [0-9a-f]{7}/)
   await expect(tip).toBeInViewport({ ratio: 1 })
-  await page.getByRole('heading', { name: /Muse Builder/ }).tap()
+  await page.getByText('Your question').tap()
   await expect(tip).toHaveCount(0)
 
   // A full Pinned list: tapping ☆ says why nothing happens.
@@ -212,4 +216,99 @@ test('a question built by tapping gives the same StatMuse link as on desktop', a
   await askLink(page).tap()
   expect((await popup).url()).toBe(phone)
   await expect(recent(page).getByRole('link')).toHaveText(['Jayson Tatum points in the 4th quarter at home vs Lakers in wins last 10 games'])
+})
+
+// ---- SM-6: the shared header on a phone (NAV_PATTERN.md, sections 4 and 6) ----
+
+const PHONE_PAGES: [name: string, url: string][] = [
+  ['Player, empty', '/'],
+  ['Player, game by game', '/?view=gamelog&player=Shai+Gilgeous-Alexander&stat=points'],
+  ['Team leaders', '/?mode=leaders&team=Trail+Blazers&stat=assists'],
+  ['League leaders', '/?mode=leaders&team=NBA'],
+]
+
+test('the header fits at 390px on every main page: all places visible, nothing in a hidden menu', async ({ page }, testInfo) => {
+  for (const [name, url] of PHONE_PAGES) {
+    await page.goto(url)
+    await page.evaluate(() => document.fonts.ready)
+    const header = page.getByTestId('top-bar')
+    const box = (await header.boundingBox())!
+    // Same place, same size, on every page.
+    expect([box.x, box.y, box.width, box.height], name).toEqual([0, 0, 390, 157])
+    expect(await header.evaluate((el) => el.scrollWidth), name).toBeLessThanOrEqual(390)
+    for (const tab of ['Player', 'Team leaders']) {
+      await expect(place(page, tab), name).toBeInViewport({ ratio: 1 })
+      // Icon with its label under it.
+      await expect(place(page, tab).locator('svg'), name).toBeVisible()
+      await expect(place(page, tab), name).toHaveText(tab)
+    }
+    await expect(page.getByTestId('go-anywhere'), name).toBeInViewport({ ratio: 1 })
+    await expect(page.getByRole('button', { name: 'Default selections' }), name).toBeInViewport({ ratio: 1 })
+    await expect(page.getByTestId('page-history').getByRole('button'), name).toHaveCount(2)
+    // No hamburger: nothing in the header opens a hidden menu of places.
+    await expect(header.getByRole('button', { name: /menu/i }), name).toHaveCount(0)
+    // The breadcrumb shows its last two parts.
+    const shown = await page.getByTestId('crumb').evaluateAll((parts) => parts.filter((part) => getComputedStyle(part).display !== 'none').length)
+    expect(shown, name).toBe(2)
+    await expectFits(page, testInfo, `header-${name}`)
+
+    // Still on top after the page under it scrolls.
+    await page.locator('main').evaluate((el) => el.parentElement!.scrollTo(0, 600))
+    expect((await header.boundingBox())!, name).toEqual(box)
+    await expect(header, name).toBeInViewport({ ratio: 1 })
+  }
+})
+
+test('the header works by tap: places, breadcrumb lists, Go anywhere, back', async ({ page }, testInfo) => {
+  await playerBox(page).fill('LeBron James')
+  await playerBox(page).blur()
+  await place(page, 'Team leaders').tap()
+  await expect(place(page, 'Team leaders')).toHaveAttribute('aria-current', 'page')
+  await expect(page).toHaveURL(/mode=leaders/)
+
+  // The team list opens inside the screen, each row finger-sized.
+  const crumb = page.getByTestId('crumb-btn')
+  await crumb.last().tap()
+  const menu = page.getByTestId('crumb-menu')
+  await expect(menu.getByRole('menuitem')).toHaveCount(31)
+  const menuBox = (await menu.boundingBox())!
+  expect(menuBox.x).toBeGreaterThanOrEqual(0)
+  expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(390)
+  expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(844)
+  expect((await menu.getByRole('menuitem').first().boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  await expectFits(page, testInfo, 'breadcrumb-list')
+  await menu.getByRole('menuitem', { name: 'Celtics', exact: true }).tap()
+  await expect(page.getByTestId('question')).toHaveText('Celtics points leaders')
+
+  // Search is an icon button; its box fits the screen.
+  const go = (await page.getByTestId('go-anywhere').boundingBox())!
+  expect([go.width, go.height]).toEqual([44, 44])
+  await page.getByTestId('go-anywhere').tap()
+  await page.getByTestId('go-input').fill('jokic')
+  const dialog = (await page.getByTestId('go-dialog').boundingBox())!
+  expect(dialog.x).toBeGreaterThanOrEqual(0)
+  expect(dialog.x + dialog.width).toBeLessThanOrEqual(390)
+  await expectFits(page, testInfo, 'go-anywhere')
+  const hit = page.getByTestId('go-item').first()
+  expect((await hit.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  await hit.tap()
+  await expect(page.getByTestId('question')).toHaveText('Nikola Jokic points')
+
+  // Back, twice: the leaders page, then where it started.
+  await page.getByTestId('page-history').getByRole('button', { name: 'Back' }).tap()
+  await expect(page.getByTestId('question')).toHaveText('Celtics points leaders')
+  await page.getByTestId('page-history').getByRole('button', { name: 'Back' }).tap()
+  await page.getByTestId('page-history').getByRole('button', { name: 'Back' }).tap()
+  await expect(page.getByTestId('question')).toHaveText('LeBron James stats')
+})
+
+test('build report: a screenshot of each main page (390px)', async ({ page }) => {
+  test.skip(!!process.env.BASE_URL, 'screenshots are for the local build report')
+  const dir = 'test-output/sm6'
+  mkdirSync(dir, { recursive: true })
+  for (const [name, url] of PHONE_PAGES) {
+    await page.goto(url)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${dir}/phone-${name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png` })
+  }
 })

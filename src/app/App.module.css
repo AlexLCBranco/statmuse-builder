@@ -1,17 +1,25 @@
-/* The page is exactly the window: it never scrolls. The builder (question on
-   top, filter rows under it) takes the left and Recent is a fixed column on
-   the right; each scrolls inside itself when it does not fit. Narrower
-   windows: one column, Recent under the builder, scrolling together. */
+/* The page is exactly the window: it never scrolls. The shared header is on
+   top; under it the builder (question, then filter rows) takes the left and
+   Recent is a fixed column on the right; each scrolls inside itself when it
+   does not fit. Narrower windows: one column, Recent under the builder,
+   scrolling together under the header. */
 .page {
   height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Everything under the header. */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   /* The bottom padding is where the version label sits. */
-  padding-block: var(--space-4) var(--space-6);
+  padding-block: var(--space-3) var(--space-6);
   /* Keep clear of phone notches in landscape. */
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
   padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
 }
 
 /* Takes the height left under the header. One column: this is what scrolls. */
@@ -46,7 +54,7 @@
 }
 
 @media (max-width: 640px) {
-  .page {
+  .body {
     padding-left: max(var(--gutter-phone), env(safe-area-inset-left, 0px));
     padding-right: max(var(--gutter-phone), env(safe-area-inset-right, 0px));
   }
@@ -57,33 +65,4 @@
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-1) var(--space-3);
-  flex-wrap: wrap;
-}
-
-.brand {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: var(--weight-heavy);
-  font-size: var(--text-brand);
-  line-height: var(--line-normal);
-  letter-spacing: var(--tracking-brand);
-  text-transform: uppercase;
-}
-
-.slash {
-  color: var(--color-accent);
-}
-
-.tag {
-  font-size: var(--text-xs);
-  color: var(--color-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }

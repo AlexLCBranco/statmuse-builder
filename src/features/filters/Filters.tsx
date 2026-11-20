@@ -7,7 +7,6 @@ import {
   LEAGUE,
   LEAGUE_OPTION,
   MAX_LAST_N,
-  MODE_OPTIONS,
   QUARTER_OPTIONS,
   REST_OPTIONS,
   RESULT_OPTIONS,
@@ -19,8 +18,6 @@ import {
   isRowDefault,
   parseLastN,
   resetRow,
-  setMode,
-  type Mode,
   type QueryState,
   type View,
 } from '../../domain/query'
@@ -34,21 +31,19 @@ interface Props {
   query: QueryState
   /** Changes some fields. */
   onChange: (changes: Partial<QueryState>) => void
-  /** Swaps in a whole query (mode switch, row reset, a recent search). */
+  /** Swaps in a whole query (a row reset, a recent search). */
   onReplace: (query: QueryState) => void
   onSubmit: () => void
   /** Recent and Pinned, for the empty player/team box. */
   saved: Saved
-  /** Shown at the right end of the mode/view line (the defaults gear). */
-  corner?: ReactNode
 }
 
 /**
- * All the controls under the question: the mode and view switches, the
- * player (or team), then the filters this mode offers. Short filters share a
+ * All the controls under the question: the player (or team) with the view
+ * switch beside it, then the filters this mode offers. Short filters share a
  * row so everything fits one desktop screen.
  */
-export function Filters({ query, onChange, onReplace, onSubmit, saved, corner }: Props) {
+export function Filters({ query, onChange, onReplace, onSubmit, saved }: Props) {
   const leaders = isLeaders(query)
   const offers = (key: FilterKey) => offersFilter(query, key)
   const box = boxRecents(saved, query.mode)
@@ -83,82 +78,79 @@ export function Filters({ query, onChange, onReplace, onSubmit, saved, corner }:
   return (
     // A form for semantics only; submitting is always cancelled.
     <form className={styles.controls} autoComplete="off" onSubmit={(event) => event.preventDefault()}>
-      <div className={styles.switches}>
-        <ChipGroup
-          label="Mode"
-          variant="switch"
-          options={MODE_OPTIONS}
-          value={query.mode}
-          onChange={(mode) => onReplace(setMode(query, mode as Mode))}
-        />
-        {!leaders && (
-          <ChipGroup
-            label="View"
-            variant="switch"
-            options={VIEW_OPTIONS}
-            value={query.view}
-            onChange={(view) => onChange({ view: view as View })}
-          />
+      {/* The page rows (NAV_PATTERN.md): What is the player or team box, How the view switch. */}
+      <div className={`${styles.row} ${styles.pageRows}`} data-testid="page-rows">
+        {leaders ? (
+          <div className={styles.field}>
+            <label className={styles.rowLabel} htmlFor="team">
+              Team
+            </label>
+            <div className={styles.control}>
+              <TeamCombobox
+                id="team"
+                large
+                value={query.team}
+                onChange={(team) => onChange({ team })}
+                onSubmit={onSubmit}
+                first={LEAGUE_OPTION}
+                placeholder="Pick a team…"
+                listLabel="Leader teams"
+                toggleLabel="Show the team list"
+                recents={{
+                  namesLabel: 'Recent teams',
+                  names: box.names,
+                  nameLabel: (team) => (team === LEAGUE ? LEAGUE_OPTION.label : team),
+                  pinned: box.pinned,
+                  searches: box.searches,
+                  onPickSearch: onReplace,
+                }}
+              />
+            </div>
+            <div className={styles.resetSlot} />
+          </div>
+        ) : (
+          <div className={styles.field}>
+            <label className={styles.rowLabel} htmlFor="player">
+              Player
+            </label>
+            <div className={styles.control}>
+              <PlayerCombobox
+                id="player"
+                large
+                withTeams
+                value={query.player}
+                onChange={(player) => onChange({ player })}
+                onSubmit={onSubmit}
+                placeholder="Type any player or team…"
+                listLabel="Players and teams"
+                hint={`Players (${PLAYERS_SEASON} rosters) or a team for team stats; any name you type works.`}
+                recents={{
+                  namesLabel: 'Recent players',
+                  names: box.names,
+                  pinned: box.pinned,
+                  searches: box.searches,
+                  onPickSearch: onReplace,
+                }}
+              />
+            </div>
+            <div className={styles.resetSlot} />
+          </div>
         )}
-        {corner}
+        {!leaders && (
+          <div className={`${styles.field} ${styles.how}`}>
+            <div className={styles.rowLabel}>How</div>
+            <div className={styles.control}>
+              <ChipGroup
+                label="How"
+                variant="switch"
+                options={VIEW_OPTIONS}
+                value={query.view}
+                onChange={(view) => onChange({ view: view as View })}
+              />
+            </div>
+          </div>
+        )}
       </div>
-
-      {leaders ? (
-        <div className={styles.field}>
-          <label className={styles.rowLabel} htmlFor="team">
-            Team
-          </label>
-          <div className={styles.control}>
-            <TeamCombobox
-              id="team"
-              large
-              value={query.team}
-              onChange={(team) => onChange({ team })}
-              onSubmit={onSubmit}
-              first={LEAGUE_OPTION}
-              placeholder="Pick a team…"
-              listLabel="Leader teams"
-              toggleLabel="Show the team list"
-              recents={{
-                namesLabel: 'Recent teams',
-                names: box.names,
-                nameLabel: (team) => (team === LEAGUE ? LEAGUE_OPTION.label : team),
-                pinned: box.pinned,
-                searches: box.searches,
-                onPickSearch: onReplace,
-              }}
-            />
-          </div>
-          <div className={styles.resetSlot} />
-        </div>
-      ) : (
-        <div className={styles.field}>
-          <label className={styles.rowLabel} htmlFor="player">
-            Player
-          </label>
-          <div className={styles.control}>
-            <PlayerCombobox
-              id="player"
-              large
-              withTeams
-              value={query.player}
-              onChange={(player) => onChange({ player })}
-              onSubmit={onSubmit}
-              placeholder="Type any player or team…"
-              listLabel="Players and teams"
-              hint={`Players (${PLAYERS_SEASON} rosters) or a team for team stats; any name you type works.`}
-              recents={{
-                namesLabel: 'Recent players',
-                names: box.names,
-                pinned: box.pinned,
-                searches: box.searches,
-                onPickSearch: onReplace,
-              }}
-            />
-          </div>
-          <div className={styles.resetSlot} />
-        </div>
-      )}
 
       {offers('stat') && (
         <Row>

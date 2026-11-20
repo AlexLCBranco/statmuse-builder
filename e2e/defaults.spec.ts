@@ -8,6 +8,8 @@ const KEY = 'smb.defaults'
 
 const question = (page: Page) => page.getByTestId('question')
 const group = (page: Page, name: string) => page.getByRole('group', { name, exact: true })
+/** A place tab in the header (Player, Team leaders). */
+const place = (page: Page, name: string) => page.getByTestId('where-tabs').getByRole('button', { name, exact: true })
 const chip = (page: Page, groupName: string, name: string) => group(page, groupName).getByRole('button', { name, exact: true })
 const playerBox = (page: Page) => page.getByRole('combobox', { name: 'Player', exact: true })
 const lastN = (page: Page) => page.getByRole('spinbutton', { name: 'Last N games' })
@@ -22,8 +24,8 @@ const pressed = (page: Page, groupName: string, name: string) =>
 
 /** The factory defaults: Player, Averages, All stats, every filter on "Any". */
 async function expectFactory(page: Page) {
-  await pressed(page, 'Mode', 'Player')
-  await pressed(page, 'View', 'Averages')
+  await expect(place(page, 'Player')).toHaveAttribute('aria-current', 'page')
+  await pressed(page, 'How', 'Averages')
   await pressed(page, 'Stat', 'All stats')
   await pressed(page, 'Quarter', 'Full game')
   for (const name of ['Court', 'Result', 'Period']) await pressed(page, name, 'Any')
@@ -111,29 +113,29 @@ test('save, reload: the saved chips are pressed and the boxes are empty', async 
     lastN: '',
   })
 
-  await page.reload()
-  await pressed(page, 'Mode', 'Player')
-  await pressed(page, 'View', 'Averages')
+  await page.goto('/')
+  await expect(place(page, 'Player')).toHaveAttribute('aria-current', 'page')
+  await pressed(page, 'How', 'Averages')
   await expectChosenChips(page)
   await expectBoxesEmpty(page)
   await expect(question(page)).toHaveText('Pick a player points in the 4th quarter at home in wins last 10 games')
 })
 
 test('mode and view are saved too', async ({ page }) => {
-  await chip(page, 'View', 'Game by game').click()
+  await chip(page, 'How', 'Game by game').click()
   await chip(page, 'Result', 'Losses').click()
   await saveAsDefault(page)
-  await page.reload()
-  await pressed(page, 'View', 'Game by game')
+  await page.goto('/')
+  await pressed(page, 'How', 'Game by game')
   await expect(question(page)).toHaveText('Pick a player game log in losses')
 
-  await chip(page, 'Mode', 'Team leaders').click()
+  await place(page, 'Team leaders').click()
   await chip(page, 'Stat', 'Assists').click()
   await page.getByRole('combobox', { name: 'Team', exact: true }).fill('lakers')
   await page.getByRole('combobox', { name: 'Team', exact: true }).press('Enter')
   await saveAsDefault(page)
-  await page.reload()
-  await pressed(page, 'Mode', 'Team leaders')
+  await page.goto('/')
+  await expect(place(page, 'Team leaders')).toHaveAttribute('aria-current', 'page')
   await pressed(page, 'Stat', 'Assists')
   // The team is a box: never saved.
   await expect(page.getByRole('combobox', { name: 'Team', exact: true })).toHaveValue('')
@@ -142,7 +144,7 @@ test('mode and view are saved too', async ({ page }) => {
 
 test('reset: the key is removed and the factory defaults show at once', async ({ page }) => {
   await chooseEverything(page)
-  await chip(page, 'View', 'Game by game').click()
+  await chip(page, 'How', 'Game by game').click()
   await saveAsDefault(page)
   expect(await stored(page)).not.toBeNull()
 
@@ -157,7 +159,7 @@ test('reset: the key is removed and the factory defaults show at once', async ({
   await expect(page.getByRole('combobox', { name: 'Opponent' })).toHaveValue('Heat')
   await expect(resetButton(page)).toHaveText('Reset to factory defaults', { timeout: 4000 })
 
-  await page.reload()
+  await page.goto('/')
   await expectFactory(page)
   await expectBoxesEmpty(page)
 })
@@ -194,7 +196,7 @@ test('Clear all goes back to the saved defaults and empties the boxes', async ({
 test('the per-row ✕ still goes to "Any", not to the saved default', async ({ page }) => {
   await chip(page, 'Result', 'Wins').click()
   await saveAsDefault(page)
-  await page.reload()
+  await page.goto('/')
   await pressed(page, 'Result', 'Wins')
   await page.getByRole('button', { name: 'Reset Result', exact: true }).click()
   await pressed(page, 'Result', 'Any')
@@ -203,13 +205,13 @@ test('the per-row ✕ still goes to "Any", not to the saved default', async ({ p
 test('corrupt JSON: factory defaults, no errors', async ({ page }) => {
   const errors = watchErrors(page)
   await page.evaluate((key) => localStorage.setItem(key, '{"version":1,"stat":"poi'), KEY)
-  await page.reload()
+  await page.goto('/')
   await expectFactory(page)
   await expectBoxesEmpty(page)
   // Still works: a new default can be saved over the bad one.
   await chip(page, 'Result', 'Wins').click()
   await saveAsDefault(page)
-  await page.reload()
+  await page.goto('/')
   await pressed(page, 'Result', 'Wins')
   expect(errors).toEqual([])
 })
@@ -230,9 +232,9 @@ test('an invalid saved value falls back for that row only, no errors', async ({ 
     opponent: 'Heat',
   }
   await page.evaluate(([key, value]) => localStorage.setItem(key!, value!), [KEY, JSON.stringify(saved)])
-  await page.reload()
+  await page.goto('/')
   // Bad rows: factory. Good rows: as saved.
-  await pressed(page, 'Mode', 'Player')
+  await expect(place(page, 'Player')).toHaveAttribute('aria-current', 'page')
   await pressed(page, 'Stat', 'All stats')
   await pressed(page, 'Court', 'Any')
   await pressed(page, 'Quarter', 'Q4')
@@ -248,7 +250,7 @@ test('the back-to-back preset can be a default', async ({ page }) => {
   await chip(page, 'Back-to-back', '2nd night').click()
   await saveAsDefault(page)
   expect(JSON.parse((await stored(page))!).rest).toBe('on the second night of a back to back')
-  await page.reload()
+  await page.goto('/')
   await pressed(page, 'Back-to-back', '2nd night')
   await expect(question(page)).toHaveText('Pick a player stats on the second night of a back to back')
 })
@@ -259,7 +261,7 @@ test('a custom "last N games" round-trips', async ({ page }) => {
   await saveAsDefault(page)
   expect(JSON.parse((await stored(page))!)).toMatchObject({ period: '', lastN: '7' })
 
-  await page.reload()
+  await page.goto('/')
   await expect(lastN(page)).toHaveValue('7')
   // "last N" wins, so no period chip is pressed.
   await expect(group(page, 'Period').locator('[aria-pressed="true"]')).toHaveCount(0)
@@ -284,7 +286,7 @@ test('saved defaults leave Recent and Pinned alone', async ({ page }) => {
     },
     [[entry('LeBron James')], [entry('Stephen Curry')]],
   )
-  await page.reload()
+  await page.goto('/')
   const before = await page.evaluate(() => [localStorage.getItem('smb.recent'), localStorage.getItem('smb.pinned')])
 
   await chip(page, 'Result', 'Wins').click()
@@ -311,9 +313,8 @@ for (const viewport of [
   test.describe(`the gear and its popover at ${viewport.width}x${viewport.height}`, () => {
     test.use({ viewport })
 
-    test('top-right of the form, dark, and opening it adds no height', async ({ page }) => {
+    test('top-right of the header, dark, and opening it adds no height', async ({ page }) => {
       await page.evaluate(() => document.fonts.ready)
-      const form = page.locator('form')
       const sizes = () =>
         page.evaluate(() => {
           const doc = document.documentElement
@@ -329,15 +330,15 @@ for (const viewport of [
       const closed = await sizes()
       expect(closed.page).toEqual([0, 0, 0])
 
-      // The gear is on the form's first line, at its right edge.
-      const formBox = (await form.boundingBox())!
+      // The gear is on the header's first line, at its right edge (SM-6).
       const gearBox = (await gear(page).boundingBox())!
-      const modeBox = (await group(page, 'Mode').boundingBox())!
-      expect(Math.abs(formBox.x + formBox.width - (gearBox.x + gearBox.width))).toBeLessThanOrEqual(1)
-      expect(gearBox.y - formBox.y).toBeLessThan(viewport.width < 640 ? 130 : 4)
+      const gutter = viewport.width < 640 ? 16 : 24
+      expect(Math.abs(viewport.width - gutter - (gearBox.x + gearBox.width))).toBeLessThanOrEqual(1)
+      expect(gearBox.y).toBe(6)
       expect(gearBox.width).toBeGreaterThanOrEqual(44)
       expect(gearBox.height).toBeGreaterThanOrEqual(44)
-      if (viewport.width >= 640) expect(Math.abs(gearBox.y - modeBox.y)).toBeLessThanOrEqual(1)
+      const searchBox = (await page.getByTestId('go-anywhere').boundingBox())!
+      expect(searchBox.y).toBe(gearBox.y)
 
       await gear(page).click()
       await expect(menu(page)).toBeVisible()
@@ -378,7 +379,7 @@ test('the popover closes on a click outside and on Escape', async ({ page }) => 
   await menu(page).click({ position: { x: 2, y: 2 } })
   await expect(menu(page)).toBeVisible()
 
-  await page.getByRole('heading', { name: 'Recent' }).click()
+  await page.getByText('Your question').click()
   await expect(menu(page)).toHaveCount(0)
   await expect(gear(page)).toHaveAttribute('aria-expanded', 'false')
 

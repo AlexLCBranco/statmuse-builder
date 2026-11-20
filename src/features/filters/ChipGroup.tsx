@@ -25,6 +25,7 @@ export function ChipGroup({ label, options, value, onChange, variant = 'chips' }
           type="button"
           className={isSwitch ? styles.switchOption : `${styles.chip} ${option.value === '' ? styles.anyChip : ''}`}
           aria-pressed={option.value === value}
+          title={option.tip}
           onClick={() => onChange(option.value)}
         >
           {option.label}

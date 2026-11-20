@@ -22,6 +22,8 @@
   --color-selected-line: var(--color-accent);
   --color-focus: #7aa7ff;
   --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.4);
+  /* Behind the "Go anywhere" box. */
+  --color-shade: rgb(0 0 0 / 0.5);
   color-scheme: dark;
 
   /* ---- Fonts ---- */
@@ -65,6 +67,8 @@
   --radius-full: 999px;
   --side-col: 380px;
   --label-col: 104px;
+  /* The player / team row keeps at least this width before How wraps under it. */
+  --subject-min: 480px;
   --space-row: 10px;
 
   /* ---- Click targets: big enough to hit without aiming ---- */
@@ -79,5 +83,25 @@
   --gutter: 24px;
   --gutter-phone: 16px;
   --duration-fast: 0.2s;
+
+  /* ---- The shared header (SM-6): one fixed height per screen size ---- */
+  --header-pad: 6px;
+  --header-gap: 5px;
+  /* pad + line + gap + places + border */
+  --header-h: calc(var(--header-pad) + 2 * var(--hit) + var(--header-gap) + 1px);
+  --place-h-phone: 52px;
+  /* pad + tools + gap + breadcrumb + gap + places + border */
+  --header-h-phone: calc(var(--header-pad) + 2 * var(--hit) + 2 * var(--header-gap) + var(--place-h-phone) + 1px);
+  --crumb-max: 260px;
+  --crumb-max-phone: 170px;
+  --menu-min: 180px;
+  --go-w: 220px;
+  --dialog-w: 560px;
+  --icon-sm: 16px;
+  /* Header changes fade briefly instead of snapping. */
+  --duration-nav: 0.12s;
+  --z-header: 8;
+  --z-menu: 9;
+  --z-dialog: 20;
 }
 

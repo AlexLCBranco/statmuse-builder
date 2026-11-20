@@ -4,15 +4,7 @@
   gap: var(--space-row);
 }
 
-/* ---- Mode / view switches: segmented controls above the first row ---- */
-.switches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--chip-gap) var(--space-4);
-  /* The defaults gear (right end) lines up with the reset ✕ column. */
-  align-items: center;
-}
-
+/* ---- The view switch (How): a segmented control ---- */
 .switch {
   display: inline-flex;
   border: 1px solid var(--color-line);
@@ -80,6 +72,27 @@
    needs to be as wide as its text. */
 .row > .field + .field {
   grid-template-columns: auto minmax(0, 1fr) var(--hit);
+}
+
+/* The page rows: the player (or team) box, then How. They share a line when
+   there is room; How drops under the box before the box gets too narrow. */
+.pageRows {
+  flex-wrap: wrap;
+}
+
+.pageRows > .field:first-child {
+  min-width: min(100%, var(--subject-min));
+}
+
+/* How sits right of the player box, only as wide as it needs; no reset slot. */
+.row > .field.how {
+  --row-h: var(--input-h);
+  flex: 0 0 auto;
+  grid-template-columns: auto auto;
+}
+
+.how .switchOption {
+  min-height: var(--input-h);
 }
 
 .rowLabel {
@@ -315,6 +328,10 @@
   .row > .field + .field {
     grid-template-columns: minmax(0, 1fr) var(--hit);
     gap: 0 var(--space-1);
+  }
+
+  .row > .field.how {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .rowLabel {

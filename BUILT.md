@@ -4,6 +4,10 @@ Shipped work only, newest first. Planned work is in `FEATURE_BACKLOG.md`, never 
 Entries dated before 2026-11-16 were backfilled from the git commit messages (data, docs, test-only, merge and
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
+## 2026-11-20
+- SM-6 — Shared layout: pinned header menu, chips instead of dropdowns (v0.19.0)
+  A header that stays at the top (back / forward, a breadcrumb whose parts jump to their neighbours, "Go anywhere" search on Ctrl+K, the gear) with the two places under it (Player · Team leaders); every choice is now in the address bar, so a reload or a shared link shows the same screen.
+
 ## 2026-11-18
 - SM-3 — Back-to-back preset (v0.18.0)
   A "Back-to-back: 2nd night" chip adds "on the second night of a back to back" to any question; 1st night is left out (StatMuse misreads it).

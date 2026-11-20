@@ -1,13 +1,12 @@
-/* Sits at the right end of the mode/view line, so it takes no row of its
-   own. The popover is positioned against this box. */
+/* Sits at the right end of the header. The popover is positioned against
+   this box. */
 .root {
   position: relative;
-  margin-left: auto;
 }
 
 .gear {
-  width: var(--control-h);
-  height: var(--control-h);
+  width: var(--hit);
+  height: var(--hit);
   display: grid;
   place-items: center;
   padding: 0;

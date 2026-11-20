@@ -1,0 +1,402 @@
+/* The shared header (backlogkit's NAV_PATTERN.md; same build as footykit's
+   FK-65, in this app's tokens and with this app's 44px click targets).
+   One fixed height on every screen, so nothing under it ever jumps. The page
+   itself never scrolls (see App.module.css), so the header is always on top. */
+.header {
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  height: var(--header-h);
+  padding-top: var(--header-pad);
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--header-gap);
+}
+
+/* ---- Line 1: back / forward, breadcrumb, Go anywhere, tools ---- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--hit);
+  min-width: 0;
+}
+
+.history {
+  display: inline-flex;
+  gap: var(--space-1);
+  flex: none;
+}
+
+.historyButton {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  font-size: var(--text-control);
+  background: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--duration-nav), color var(--duration-nav);
+}
+
+.historyButton:hover:not(:disabled) {
+  background: var(--color-chip);
+}
+
+.historyButton:disabled {
+  color: var(--color-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.crumb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.crumb:first-child .separator {
+  display: none;
+}
+
+.separator {
+  color: var(--color-muted);
+  padding: 0 var(--space-1);
+}
+
+.crumbButton {
+  height: var(--hit);
+  min-width: var(--hit);
+  max-width: var(--crumb-max);
+  padding: 0 var(--space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-lg);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background-color var(--duration-nav), border-color var(--duration-nav), color var(--duration-nav);
+}
+
+.crumbButton:hover,
+.crumbButton[aria-expanded="true"] {
+  color: var(--color-ink);
+  border-color: var(--color-line);
+  background: var(--color-surface);
+}
+
+.crumbLast {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: var(--space-3);
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  min-width: var(--menu-min);
+  max-width: calc(100vw - 2 * var(--gutter-phone));
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.crumb:first-child .menu {
+  left: 0;
+}
+
+.menuItem {
+  flex: none;
+  min-height: var(--hit);
+  padding: 0 var(--space-3);
+  text-align: left;
+  white-space: nowrap;
+  font-size: var(--text-lg);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: var(--color-chip);
+}
+
+.menuItem[aria-current="true"] {
+  color: var(--color-selected-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.menuItem:focus-visible {
+  outline-offset: -2px;
+}
+
+.end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+/* ---- Go anywhere ---- */
+.goButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--hit);
+  min-width: var(--go-w);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  font-size: var(--text-base);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: border-color var(--duration-nav), color var(--duration-nav);
+}
+
+.goButton:hover {
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.goIcon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  flex: none;
+}
+
+.goKey {
+  margin-left: auto;
+  font: inherit;
+  font-size: var(--text-xs);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-1);
+}
+
+.shade {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  background: var(--color-shade);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+
+.dialog {
+  width: min(var(--dialog-w), calc(100vw - 2 * var(--gutter-phone)));
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+
+.goInput {
+  width: 100%;
+  height: var(--input-h);
+  padding: 0 var(--space-4);
+  font-size: var(--text-input);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-ink);
+  outline: none;
+}
+
+.goList {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: var(--space-1);
+}
+
+.goItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--hit);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-lg);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.goItem[aria-selected="true"] {
+  background: var(--color-selected);
+}
+
+.goKind {
+  flex: none;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.goNone {
+  padding: var(--space-3);
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Line 2: the places ---- */
+.places {
+  display: flex;
+  gap: var(--space-1);
+  height: var(--hit);
+}
+
+.place {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  font-size: var(--text-lg);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color var(--duration-nav), border-color var(--duration-nav);
+}
+
+.place:hover {
+  color: var(--color-ink);
+}
+
+.place[aria-current="page"] {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+
+.place[aria-current="page"] .placeIcon {
+  color: var(--color-accent);
+}
+
+.place:focus-visible {
+  outline-offset: -2px;
+}
+
+.placeIcon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  flex: none;
+}
+
+/* As wide as its bold text, so picking a place never moves its neighbour. */
+.placeLabel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.placeLabel::after {
+  content: attr(data-text);
+  font-weight: var(--weight-semibold);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+/* ---- Phones: three lines, every place still visible, no hidden menu ---- */
+@media (max-width: 700px) {
+  .header {
+    height: var(--header-h-phone);
+    padding-left: max(var(--gutter-phone), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--gutter-phone), env(safe-area-inset-right, 0px));
+  }
+
+  /* Back / forward and the tools, then the breadcrumb on its own line. */
+  .row {
+    flex-wrap: wrap;
+    height: auto;
+    gap: var(--header-gap) var(--space-2);
+  }
+
+  .crumbs {
+    order: 3;
+    flex: 1 1 100%;
+    height: var(--hit);
+  }
+
+  /* The breadcrumb's last two parts. */
+  .crumb:not(:nth-last-child(-n + 2)) {
+    display: none;
+  }
+
+  .crumb:nth-last-child(2) .separator {
+    display: none;
+  }
+
+  .crumb:nth-last-child(2) .menu {
+    left: 0;
+  }
+
+  .crumbButton {
+    max-width: var(--crumb-max-phone);
+    font-size: var(--text-base);
+  }
+
+  /* Search becomes an icon button. */
+  .goButton {
+    min-width: 0;
+    width: var(--hit);
+    padding: 0;
+    justify-content: center;
+  }
+
+  .goText,
+  .goKey {
+    display: none;
+  }
+
+  .shade {
+    padding-top: var(--space-4);
+  }
+
+  /* The places: icon with its label under it, sharing the width. */
+  .places {
+    height: var(--place-h-phone);
+    gap: 0;
+  }
+
+  .place {
+    flex: 1 1 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 0 var(--space-1);
+    font-size: var(--text-xs);
+  }
+}
