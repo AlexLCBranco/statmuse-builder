@@ -144,7 +144,7 @@ test('saved default selections: the plain address starts from them, and a link s
   await expectReloadSame(page)
 })
 
-test('every place, How option and breadcrumb part navigates; reload, back and forward work', async ({ page }) => {
+test('every place, How option and breadcrumb part navigates; reload, back and forward work', { tag: '@live' }, async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto('/?player=LeBron+James&stat=points')
   await expect(history(page, 'Back')).toBeDisabled()
@@ -248,7 +248,7 @@ test('the player part lists recent players; an empty one puts the cursor in the 
   await expect(page).toHaveURL(/player=Nikola\+Jokic&result=in\+wins/)
 })
 
-test('Go anywhere (Ctrl+K): a player, a team, its leaders, a saved search; Escape closes', async ({ page }) => {
+test('Go anywhere (Ctrl+K): a player, a team, its leaders, a saved search; Escape closes', { tag: '@live' }, async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto('/?quarter=in+the+4th+quarter')
   await page.evaluate(() =>

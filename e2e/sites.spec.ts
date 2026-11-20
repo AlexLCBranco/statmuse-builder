@@ -20,7 +20,7 @@ const site = (page: Page, name: 'espn' | 'bbref' | 'crafted') => page.getByTestI
 test.describe('at 1280x800', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
 
-  test('a player: ESPN splits, Basketball-Reference and CraftedNBA; Game by game opens the game log', async ({ page }) => {
+  test('a player: ESPN splits, Basketball-Reference and CraftedNBA; Game by game opens the game log', { tag: '@live' }, async ({ page }) => {
     // Nothing to link yet.
     await expect(sites(page)).toHaveCount(0)
 
@@ -108,7 +108,7 @@ test.describe('at 1280x800', () => {
   })
 })
 
-test('each kind of link opens the right page on the real site (live site only)', async ({ page, context }) => {
+test('each kind of link opens the right page on the real site (live site only)', { tag: '@live' }, async ({ page, context }) => {
   test.skip(!process.env.BASE_URL, 'opens ESPN, Basketball-Reference and CraftedNBA; runs with e2e:prod')
   test.setTimeout(180_000)
 

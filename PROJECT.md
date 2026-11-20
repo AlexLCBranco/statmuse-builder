@@ -270,8 +270,8 @@ Layers: `app -> features -> lib -> domain -> styles`
 - Old Recent entries (saved before v0.7, without mode/team/view) load as
   player mode, averages
 - Tests: 269 unit tests (domain + the version check), 90 Playwright e2e tests (77 desktop, 13 phone; four run only in `e2e:prod`, two only locally). `npm run check`
-  runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs e2e against the
-  live site
+  runs lint + typecheck + unit + e2e; `npm run e2e:prod` runs the 13 tests
+  tagged `@live` against the live site
 - **Live test runs stay under Vercel's DDoS mitigation** (2026-11-18): a
   full `e2e:prod` run (desktop + phone) tripped Vercel's automatic DDoS
   mitigation (`sys_dos_mitigation`, a "Security Checkpoint" page with HTTP
@@ -279,10 +279,16 @@ Layers: `app -> features -> lib -> domain -> styles`
   Bypass needs Pro, and a custom firewall rule does not skip it), so the
   tests send less: `e2e/test.ts` caches the hashed `/assets/*` files per
   worker, and live runs use 2 workers. That was not enough (the IP got a
-  ~20 min "persistent challenge" after ~30 tests), so `npm run e2e:prod`
-  (`scripts/e2e-prod.mjs`) pauses the mitigation for the run and resumes it
-  after, also on failure or Ctrl+C. Vercel only allows the pause from a
-  person in a terminal (it refuses agents), so Claude's runs go unpaused.
+  ~20 min "persistent challenge" after ~30 tests). Pausing the mitigation
+  for the run (tried in v0.18.1) does not work either: Vercel answers "IP
+  Bypass is unavailable ... Pro and Enterprise plans include it" (402, seen
+  2026-11-20 when the owner confirmed the prompt). So, the owner's choice
+  (2026-11-20, "a personal tool right now"): `npm run e2e:prod`
+  (`scripts/e2e-prod.mjs`) runs only the tests tagged `@live` (13: the four
+  live-only ones, plus one or two per feature, desktop and phone), one
+  browser at a time, about a minute, no prompt. The full suite runs on the
+  same production build locally and in CI. `npm run e2e:prod -- --all`
+  still tries everything (expect the 403).
   `npx vercel firewall overview` shows challenged requests
 
 ## StatMuse compatibility
@@ -401,9 +407,10 @@ This is a sample, not proof that every combination works.
 
 ## Open problems
 
-- Vercel's DDoS mitigation can still challenge a live test run that sends
-  too much at once; the run then fails with "element(s) not found" and
-  timeouts, not app errors. Wait until the site answers 200 again and re-run.
+- The full e2e suite never runs against the live site (Vercel's DDoS
+  mitigation; pausing it needs the Pro plan). Only the 13 `@live` tests do.
+  If even that run is challenged, it fails with "element(s) not found" and
+  timeouts, not app errors: wait until the site answers 200 and re-run.
 - StatMuse now hides the result table behind a sign-up prompt after a few
   questions, so checks past that point only see the answer sentence.
 - "Turnovers leaders" is ranked fewest-first on StatMuse, so there is no

@@ -83,7 +83,7 @@ test('starts empty: no player, All stats, every filter on Any', async ({ page })
   await expect(page.getByRole('button', { name: /^Reset / })).toHaveCount(0)
 })
 
-test('builds a question from a picked player and chips, then saves it to Recent on Ask', async ({ page }) => {
+test('builds a question from a picked player and chips, then saves it to Recent on Ask', { tag: '@live' }, async ({ page }) => {
   // Autocomplete: type part of the name, arrow down, Enter.
   const player = playerBox(page)
   await player.fill('deaa')
@@ -480,7 +480,7 @@ test('rotations button: the same player or team on rotationkit', async ({ page }
   expect(popups).toBe(0)
 })
 
-test('rotationkit opens the player page for a current player (live site only)', async ({ browser }) => {
+test('rotationkit opens the player page for a current player (live site only)', { tag: '@live' }, async ({ browser }) => {
   // Hits the real rotationkit, so only after a deploy (npm run e2e:prod).
   test.skip(!process.env.BASE_URL, 'checks the external site; runs in e2e:prod')
   const page = await browser.newPage()
@@ -516,7 +516,7 @@ test('back-to-back preset: one click adds "on the second night of a back to back
   await expect(question(page)).toHaveText('Lakers points leaders on the second night of a back to back in wins')
 })
 
-test('StatMuse answers the back-to-back question (live site only)', async ({ page, browser }) => {
+test('StatMuse answers the back-to-back question (live site only)', { tag: '@live' }, async ({ page, browser }) => {
   // Hits the real StatMuse, so only after a deploy (npm run e2e:prod).
   test.skip(!process.env.BASE_URL, 'checks the external site; runs in e2e:prod')
   await playerBox(page).fill('LeBron James')
@@ -1315,7 +1315,7 @@ test('suggests 2026-27 rookies from the synced roster list', async ({ page }) =>
   await expect(playerList(page).getByRole('option')).toHaveText(['Cooper Flagg'])
 })
 
-test('shows its version in the bottom-right corner and serves /version.json', async ({ page, request }) => {
+test('shows its version in the bottom-right corner and serves /version.json', { tag: '@live' }, async ({ page, request }) => {
   const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }
   const badge = page.getByTestId('site-version')
   await expect(badge).toHaveText(`v${version}`)

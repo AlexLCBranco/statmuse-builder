@@ -90,7 +90,7 @@ test('no saved defaults: the factory defaults on load', async ({ page }) => {
   await expect(question(page)).toHaveText('Pick a player stats')
 })
 
-test('save, reload: the saved chips are pressed and the boxes are empty', async ({ page }) => {
+test('save, reload: the saved chips are pressed and the boxes are empty', { tag: '@live' }, async ({ page }) => {
   await chooseEverything(page)
   await gear(page).click()
   await expect(saveButton(page)).toHaveText('Set current selection as default')

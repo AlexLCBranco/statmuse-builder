@@ -21,7 +21,7 @@ const more = (page: Page) => page.getByRole('button', { name: /^More about where
 test.describe('at 1280x800', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
 
-  test('pick a player: the line and both links appear right of Rotations', async ({ page }) => {
+  test('pick a player: the line and both links appear right of Rotations', { tag: '@live' }, async ({ page }) => {
     await playerBox(page).click()
     await playerBox(page).pressSequentially('jalen bru')
     await page.getByRole('listbox', { name: 'Players and teams', exact: true }).getByRole('option', { name: 'Jalen Brunson' }).click()
@@ -149,7 +149,7 @@ test.describe('at 1280x800', () => {
   })
 })
 
-test('the synced record matches ESPN for Victor Wembanyama (live site only)', async ({ page, request }) => {
+test('the synced record matches ESPN for Victor Wembanyama (live site only)', { tag: '@live' }, async ({ page, request }) => {
   test.skip(!process.env.BASE_URL, 'asks ESPN, the real source; runs with e2e:prod')
   const response = await request.get('https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/athletes/5104157?lang=en&region=us')
   expect(response.ok()).toBe(true)

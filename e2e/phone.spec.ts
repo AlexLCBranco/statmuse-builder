@@ -206,7 +206,7 @@ async function desktopUrl(browser: Browser, origin: string): Promise<string> {
   }
 }
 
-test('a question built by tapping gives the same StatMuse link as on desktop', async ({ page, browser }) => {
+test('a question built by tapping gives the same StatMuse link as on desktop', { tag: '@live' }, async ({ page, browser }) => {
   const phone = await buildQuestion(page, 'tap')
   expect(phone).toBe('https://www.statmuse.com/nba/ask/jayson-tatum-points-in-the-4th-quarter-at-home-vs-lakers-in-wins-last-10-games')
   expect(await desktopUrl(browser, new URL('/', page.url()).href)).toBe(phone)
@@ -227,7 +227,7 @@ const PHONE_PAGES: [name: string, url: string][] = [
   ['League leaders', '/?mode=leaders&team=NBA'],
 ]
 
-test('the header fits at 390px on every main page: all places visible, nothing in a hidden menu', async ({ page }, testInfo) => {
+test('the header fits at 390px on every main page: all places visible, nothing in a hidden menu', { tag: '@live' }, async ({ page }, testInfo) => {
   for (const [name, url] of PHONE_PAGES) {
     await page.goto(url)
     await page.evaluate(() => document.fonts.ready)

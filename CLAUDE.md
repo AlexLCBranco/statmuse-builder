@@ -31,14 +31,16 @@ learning frontend: keep code clean and explain decisions briefly.
    commit.
 4. Commit on `main`, push. Vercel deploys every push to `main`.
 5. `npm run wait-live` waits until the live `/version.json` shows the new
-   version; tell the owner that number. Then `npm run e2e:prod` runs the e2e
-   suite against the live site.
-   A full run trips Vercel's DDoS mitigation (HTTP 403 "Security
-   Checkpoint"). In a terminal the script pauses it (the owner confirms
-   Vercel's prompt) and resumes it after; Vercel refuses that to agents, so
-   Claude's runs go unpaused. If Claude's run hits the 403, say so and ask the
-   owner to run `npm run e2e:prod` in a terminal. Never try to get around the
-   checkpoint or the prompt.
+   version; tell the owner that number. Then `npm run e2e:prod` runs a small
+   e2e set against the live site: the tests tagged `@live` (the live-only
+   ones, plus one or two per feature), one browser at a time. No prompt;
+   Claude runs it too.
+   It is small on purpose (the owner's choice, 2026-11-20): the full suite
+   trips Vercel's DDoS mitigation (HTTP 403 "Security Checkpoint"), and
+   pausing that needs Vercel's Pro plan; this is a personal tool on Hobby.
+   The full suite runs locally and in CI. A new feature gets one `@live`
+   test. If a run still hits the 403, say so, wait until the site answers
+   200 and re-run. Never try to get around the checkpoint.
 
 ## Git and deploy
 
@@ -65,7 +67,7 @@ step at a time.
 npm run dev       # dev server on :5190
 npm run check     # lint + typecheck + unit + e2e (run before every commit)
 npm run wait-live # wait for the live site to serve this version
-npm run e2e:prod  # e2e against https://statmuse-builder.vercel.app
+npm run e2e:prod  # the small @live e2e set against https://statmuse-builder.vercel.app
 ```
 
 ## Feature backlog, built list and ideas (owner's standing workflow, updated 2026-11-15)

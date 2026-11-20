@@ -12,6 +12,9 @@ spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Featu
 - SM-6 — Shared layout: pinned header menu, chips instead of dropdowns (v0.19.0)
   A header that stays at the top (back / forward, a breadcrumb whose parts jump to their neighbours, "Go anywhere" search on Ctrl+K, the gear) with the two places under it (Player · Team leaders); every choice is now in the address bar, so a reload or a shared link shows the same screen.
 
+### Internal
+- Live test run is now a small set (13 tests, about a minute, no prompt): pausing Vercel's protection needs the Pro plan (v0.21.0)
+
 ## 2026-11-18
 - SM-3 — Back-to-back preset (v0.18.0)
   A "Back-to-back: 2nd night" chip adds "on the second night of a back to back" to any question; 1st night is left out (StatMuse misreads it).
