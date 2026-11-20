@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState, type MouseEvent, type Ref } from 'react'
 
 import { isLeaders } from '../../domain/availability'
+import { bioPlayer } from '../../domain/bio'
+import { PLAYERS } from '../../domain/data/players'
 import { buildQuestion, canSwapPlayers, isReady, questionParts, tooManyFilters, type QueryState } from '../../domain/query'
 import { rotationsLink } from '../../domain/rotations'
 import { statmuseUrl } from '../../domain/slug'
 import { copyText, selectContents } from '../../lib/clipboard'
+import { BioLine } from '../bio/BioLine'
 import styles from './QuestionCard.module.css'
 
 interface Props {
@@ -28,6 +31,8 @@ export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear, 
   const question = buildQuestion(query)
   const url = statmuseUrl(question)
   const rotations = rotationsLink(query)
+  // The roster player whose draft, college and hometown show beside Rotations.
+  const bioName = bioPlayer(query, PLAYERS)
   const urlElement = useRef<HTMLDivElement>(null)
   const [toast, setToast] = useState('')
 
@@ -139,10 +144,13 @@ export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear, 
         >
           {rotations.label} <span aria-hidden="true">↗</span>
         </a>
-        <span className={styles.toast} role="status">
-          {toast}
-        </span>
+        {/* key: a new player starts with the details closed. */}
+        {bioName && <BioLine key={bioName} name={bioName} />}
       </div>
+      {/* In the card's top corner, out of the layout: it never moves a button. */}
+      <span className={styles.toast} role="status">
+        {toast}
+      </span>
     </section>
   )
 }

@@ -84,6 +84,11 @@
   --gutter-phone: 16px;
   --duration-fast: 0.2s;
 
+  /* ---- The background line beside Rotations (SM-4) ---- */
+  --bio-w: 420px;
+  --bio-details-w: 460px;
+  --bio-label-w: 64px;
+
   /* ---- The shared header (SM-6): one fixed height per screen size ---- */
   --header-pad: 6px;
   --header-gap: 5px;

@@ -5,6 +5,8 @@ Entries dated before 2026-11-16 were backfilled from the git commit messages (da
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
 ## 2026-11-20
+- SM-4 — Draft, college and hometown next to Rotations (v0.20.0)
+  With a player picked, a short line beside "Rotations ↗" shows where he was drafted, his college and where he is from ("Draft 2023, pick 1 (SAS) · No US college · France"), with links to that whole draft and to his college team; hover it (or tap the ⓘ) for the full details.
 - SM-6 — Shared layout: pinned header menu, chips instead of dropdowns (v0.19.0)
   A header that stays at the top (back / forward, a breadcrumb whose parts jump to their neighbours, "Go anywhere" search on Ctrl+K, the gear) with the two places under it (Player · Team leaders); every choice is now in the address bar, so a reload or a shared link shows the same screen.
 

@@ -1,0 +1,170 @@
+/* The slot right of the Rotations button. Its size never depends on what is
+   in it (it is there, empty, while the data loads), so it wraps to the next
+   line of buttons, or not, the same way before and after. The details box is
+   positioned against it. */
+.slot {
+  position: relative;
+  flex: 1 1 var(--bio-w);
+  min-width: 0;
+  min-height: var(--input-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-base);
+  color: var(--color-muted);
+}
+
+/* One line; what does not fit is cut with "…" (the details have it all). */
+.line {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.dot {
+  flex: none;
+}
+
+.text,
+.link {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Only the last part (where he is from) is cut when the line is too long. */
+.line > :not(:last-child) {
+  flex: none;
+}
+
+.link {
+  min-height: var(--hit);
+  min-width: var(--hit);
+  line-height: var(--hit);
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--color-muted);
+  text-underline-offset: 3px;
+  transition: color var(--duration-nav), text-decoration-color var(--duration-nav);
+}
+
+.link:hover {
+  color: var(--color-accent);
+  text-decoration-color: var(--color-accent);
+}
+
+.more {
+  flex: none;
+  width: var(--hit);
+  height: var(--hit);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color var(--duration-nav), background-color var(--duration-nav);
+}
+
+.more:hover,
+.more[aria-expanded="true"] {
+  color: var(--color-ink);
+  background: var(--color-chip);
+}
+
+.icon {
+  width: var(--icon);
+  height: var(--icon);
+}
+
+/* Floats under the slot, right edges aligned: out of the layout, so opening
+   it moves nothing. No gap above it, so the mouse can travel into it. */
+.details {
+  position: absolute;
+  z-index: 6;
+  top: 100%;
+  right: 0;
+  width: max-content;
+  max-width: min(var(--bio-details-w), calc(100vw - 2 * var(--gutter-phone) - 2 * var(--space-5)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.name {
+  font-weight: var(--weight-semibold);
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: var(--bio-label-w) minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+  line-height: calc(var(--text-base) * var(--line-normal));
+}
+
+.detailLink {
+  color: var(--color-selected-ink);
+  white-space: nowrap;
+}
+
+/* Phones: the slot is a line of its own and its parts wrap instead of being
+   cut; each link is a finger-sized target. */
+@media (max-width: 640px) {
+  .slot {
+    flex-basis: 100%;
+    align-items: flex-start;
+  }
+
+  /* One part per line, no dots between them. */
+  .line {
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .dot {
+    display: none;
+  }
+
+  .text {
+    line-height: var(--hit);
+  }
+
+  .details {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+  }
+
+  /* A finger-sized link inside the details too. */
+  .detailLink {
+    display: inline-block;
+    min-height: var(--hit);
+    line-height: var(--hit);
+  }
+}

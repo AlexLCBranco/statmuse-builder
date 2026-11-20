@@ -312,3 +312,44 @@ test('build report: a screenshot of each main page (390px)', async ({ page }) =>
     await page.screenshot({ path: `${dir}/phone-${name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png` })
   }
 })
+
+// ---- SM-4: the draft, college and hometown line on a phone ----
+
+test('the background line fits and works by tap', async ({ page }, testInfo) => {
+  await playerBox(page).fill('Jalen Brunson')
+  await playerBox(page).blur()
+  const line = page.getByTestId('bio-line')
+  // One part per line here (the dots between them are hidden).
+  await expect(line).toHaveText('Draft 2018, round 2, pick 33 (DAL) ↗·Villanova 2015-18 ↗·New Brunswick, NJ')
+  const tops = await line.locator('a, [data-testid="bio-home"]').evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)))
+  expect(new Set(tops).size).toBe(3)
+  await line.scrollIntoViewIfNeeded()
+  await expectFits(page, testInfo, 'background-line')
+  // Both links are finger-sized.
+  for (const part of ['bio-draft', 'bio-college']) {
+    const box = (await page.getByTestId(part).boundingBox())!
+    expect(box.height, part).toBeGreaterThanOrEqual(44)
+    expect(box.width, part).toBeGreaterThanOrEqual(44)
+  }
+
+  // No hover on a phone: a tap on the button shows the details, inside the screen.
+  const more = page.getByRole('button', { name: 'More about where Jalen Brunson comes from' })
+  await expect(page.getByTestId('bio-details')).toHaveCount(0)
+  await more.tap()
+  const details = page.getByTestId('bio-details')
+  await expect(details).toContainText('2018: round 2, pick 33, by the Dallas Mavericks.')
+  await expect(details).toContainText('Villanova, 2017-18: 18.9 points, 3.1 rebounds, 4.6 assists a game.')
+  await expect(details).toContainText('New Brunswick, NJ.')
+  const box = (await details.boundingBox())!
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(390)
+  await expectFits(page, testInfo, 'background-details')
+  for (const link of await details.getByRole('link').all()) expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  // A tap outside closes it; a second tap on the button does too.
+  await page.getByText('Your question').tap()
+  await expect(details).toHaveCount(0)
+  await more.tap()
+  await expect(details).toBeVisible()
+  await more.tap()
+  await expect(details).toHaveCount(0)
+})
