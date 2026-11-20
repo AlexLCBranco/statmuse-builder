@@ -1,4 +1,4 @@
-/* The header: one line (back / forward, the places, the tools).
+/* The header: one line (the places, the tools).
    One fixed height on every screen, so nothing under it ever jumps. The page
    itself never scrolls (see App.module.css), so the header is always on top. */
 .header {
@@ -15,35 +15,6 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-}
-
-.history {
-  display: inline-flex;
-  gap: var(--space-1);
-  flex: none;
-}
-
-.historyButton {
-  width: var(--hit);
-  height: var(--hit);
-  padding: 0;
-  font-size: var(--text-control);
-  background: none;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  color: var(--color-ink);
-  cursor: pointer;
-  transition: background-color var(--duration-nav), color var(--duration-nav);
-}
-
-.historyButton:hover:not(:disabled) {
-  background: var(--color-chip);
-}
-
-.historyButton:disabled {
-  color: var(--color-muted);
-  opacity: 0.45;
-  cursor: default;
 }
 
 .end {

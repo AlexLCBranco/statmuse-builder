@@ -5,6 +5,8 @@ Entries dated before 2026-11-16 were backfilled from the git commit messages (da
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
 ## 2026-11-20
+- Back / forward arrows removed from the header (v0.23.0)
+  The top line is now just Player · Team leaders and the gear; the browser's own back and forward buttons still step through the pages.
 - Header is one line: the breadcrumb and "Go anywhere" search are gone (v0.22.0)
   The top of the page is now a single short line: back / forward, Player · Team leaders, and the gear.
 - SM-5 — Links to other stats sites, not only StatMuse (v0.21.0)

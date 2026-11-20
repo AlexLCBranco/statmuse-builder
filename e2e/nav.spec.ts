@@ -4,8 +4,8 @@ import { expect, test, type Page } from './test.js'
 
 /**
  * The header and the address bar. The pinned one-line header on every main
- * page (back / forward, the places, the gear; no breadcrumb and no "Go
- * anywhere" search, removed in v0.22.0); every place and How option
+ * page (the places and the gear; no breadcrumb, no "Go anywhere" search and
+ * no back / forward arrows: removed in v0.22.0 and v0.23.0); every place and How option
  * navigating, with the address round-tripping; speed; no layout shift;
  * no <select>; named icon buttons; and a screenshot of each main page for
  * the build report. The 390px checks are in phone.spec.ts.
@@ -31,7 +31,6 @@ const question = (page: Page) => page.getByTestId('question')
 const header = (page: Page) => page.getByTestId('top-bar')
 const place = (page: Page, mode: 'player' | 'leaders') => page.getByTestId(`where-${mode}`)
 const how = (page: Page, name: string) => page.getByRole('group', { name: 'How', exact: true }).getByRole('button', { name, exact: true })
-const history = (page: Page, name: 'Back' | 'Forward') => page.getByTestId('page-history').getByRole('button', { name })
 
 /** Console errors and crashes while the test runs. */
 function watchErrors(page: Page): string[] {
@@ -73,7 +72,9 @@ test.describe('at 1366x768', () => {
       await page.keyboard.press('Control+k')
       await expect(page.getByRole('dialog'), name).toHaveCount(0)
       await expect(page.getByRole('button', { name: 'Default selections' }), name).toBeVisible()
-      await expect(history(page, 'Back'), name).toBeVisible()
+      // No back / forward arrows: the browser's own do that.
+      await expect(page.getByTestId('page-history'), name).toHaveCount(0)
+      await expect(header(page).getByRole('button'), name).toHaveCount(3)
       const box = (await header(page).boundingBox())!
       expect([box.x, box.y, box.width, box.height], name).toEqual([0, 0, 1366, HEADER_H])
 
@@ -150,8 +151,6 @@ test('saved default selections: the plain address starts from them, and a link s
 test('every place and How option navigates; reload, back and forward work', { tag: '@live' }, async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto('/?player=LeBron+James&stat=points')
-  await expect(history(page, 'Back')).toBeDisabled()
-  await expect(history(page, 'Forward')).toBeDisabled()
   await expect(page).toHaveTitle('LeBron James points — StatMuse Builder')
 
   // The places.
@@ -184,33 +183,30 @@ test('every place and How option navigates; reload, back and forward work', { ta
   await expect(how(page, 'Averages')).toHaveAttribute('aria-pressed', 'true')
   await expect(page).not.toHaveURL(/view=/)
 
-  // Back and forward: the browser's and the header's, page by page.
+  // The browser's back and forward, page by page.
   // Pages so far: averages > leaders > Lakers > player > game by game > averages.
   await page.goBack()
   await expect(question(page)).toHaveText('LeBron James points game log')
-  await history(page, 'Back').click()
+  await page.goBack()
   await expect(question(page)).toHaveText('LeBron James points')
   await expect(how(page, 'Averages')).toHaveAttribute('aria-pressed', 'true')
-  await history(page, 'Back').click()
+  await page.goBack()
   await expect(question(page)).toHaveText('Lakers points leaders')
-  await expect(history(page, 'Forward')).toBeEnabled()
   // Still right after a reload in the middle of the history.
   await page.reload()
-  await expect(history(page, 'Back')).toBeEnabled()
-  await expect(history(page, 'Forward')).toBeEnabled()
-  await history(page, 'Forward').click()
+  await expect(question(page)).toHaveText('Lakers points leaders')
+  await page.goForward()
   await expect(question(page)).toHaveText('LeBron James points')
   await page.goForward()
   await expect(question(page)).toHaveText('LeBron James points game log')
-  await history(page, 'Forward').click()
+  await page.goForward()
   await expect(how(page, 'Averages')).toHaveAttribute('aria-pressed', 'true')
-  await expect(history(page, 'Forward')).toBeDisabled()
 
   // A filter changes the page it is on: Back does not step through chips.
   await page.getByRole('group', { name: 'Result', exact: true }).getByRole('button', { name: 'Wins', exact: true }).click()
   await page.getByRole('group', { name: 'Court', exact: true }).getByRole('button', { name: 'Home', exact: true }).click()
   await expect(question(page)).toHaveText('LeBron James points at home in wins')
-  await history(page, 'Back').click()
+  await page.goBack()
   await expect(question(page)).toHaveText('LeBron James points game log')
   expect(errors).toEqual([])
 })

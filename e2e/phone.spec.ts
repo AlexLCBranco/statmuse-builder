@@ -246,7 +246,7 @@ test('the header fits at 390px on every main page: all places visible, nothing i
     await expect(page.getByTestId('breadcrumb'), name).toHaveCount(0)
     await expect(page.getByTestId('go-anywhere'), name).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Default selections' }), name).toBeInViewport({ ratio: 1 })
-    await expect(page.getByTestId('page-history').getByRole('button'), name).toHaveCount(2)
+    await expect(page.getByTestId('page-history'), name).toHaveCount(0)
     // No hamburger: nothing in the header opens a hidden menu of places.
     await expect(header.getByRole('button', { name: /menu/i }), name).toHaveCount(0)
     await expectFits(page, testInfo, `header-${name}`)
@@ -277,11 +277,10 @@ test('the header works by tap: places, back', async ({ page }) => {
     expect(box.width).toBeGreaterThanOrEqual(44)
   }
 
-  // Back, twice: the leaders page, then where it started.
-  const back = page.getByTestId('page-history').getByRole('button', { name: 'Back' })
-  await back.tap()
+  // The phone's own Back, twice: the leaders page, then where it started.
+  await page.goBack()
   await expect(page.getByTestId('question')).toHaveText('Celtics points leaders')
-  await back.tap()
+  await page.goBack()
   await expect(page.getByTestId('question')).toHaveText('LeBron James stats')
 })
 

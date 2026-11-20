@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-20, v0.22.0_
+_Last updated: 2026-11-20, v0.23.0_
 
 ## What it is
 
@@ -59,7 +59,7 @@ Layers: `app -> features -> lib -> domain -> styles`
     own chunk, loaded after a player is picked)
 - `lib/` — browser helpers: safe localStorage, clipboard, build info, the
   font wait before first paint, `useDismiss` (close on Escape / outside).
-- `features/` — the header (`nav/`: back / forward, places); question card; the background line (`bio/`); the
+- `features/` — the header (`nav/`: the places); question card; the background line (`bio/`); the
   other-sites row (`sites/`); filters (chips and switches, player and team
   comboboxes, their shared dropdown `SuggestionList`); Recent + Pinned list;
   the default-selections gear and popover.
@@ -68,11 +68,11 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.22.0)
+## What works now (v0.23.0)
 
-- **One-line header** (v0.22.0): the breadcrumb and the "Go anywhere"
-  search (Ctrl+K) are removed; the owner found them unnecessary on a site
-  with two places. The header is one line, always on top: back / forward,
+- **One-line header** (v0.22.0, v0.23.0): the breadcrumb, the "Go anywhere"
+  search (Ctrl+K) and the header's own back / forward arrows are removed; the owner found them unnecessary on a site
+  with two places. The header is one line, always on top:
   the two places (**Player** and **Team leaders**), the defaults gear at the
   right. 51px tall (59px under 700px wide, where the places are icons with
   labels). This app no longer follows backlogkit's `NAV_PATTERN.md` for the
@@ -116,15 +116,14 @@ Layers: `app -> features -> lib -> domain -> styles`
   trades and signings, like the player list
 - **Shared layout** (v0.19.0, SM-6; backlogkit's `NAV_PATTERN.md`, same
   build as footykit's FK-65 in this app's colours and 44px targets): a
-  header always on top, the same height on every screen: back / forward
-  (the app's own pages), the two places, **Player** and **Team leaders**
-  (the old Mode switch), and the defaults gear (its breadcrumb and "Go
-  anywhere" search were removed in v0.22.0). The view switch is labelled **How**
+  header always on top, the same height on every screen: the two places, **Player** and **Team leaders**
+  (the old Mode switch), and the defaults gear (its breadcrumb, "Go anywhere" search and back / forward arrows were
+  removed in v0.22.0 and v0.23.0). The view switch is labelled **How**
   and sits right of the player box. On a phone the places are icons with
   labels; nothing is in a hidden menu.
   **Every choice is in the address bar** (`?player=LeBron+James&stat=points`;
   only what differs from the factory defaults): a reload or a shared link
-  shows the same screen, and back / forward step through pages (a place, a
+  shows the same screen, and the browser's back / forward step through pages (a place, a
   view or a saved search is a page; a chip or a
   typed letter only updates the current one). The plain address is the
   start screen (the saved defaults), so old links work. The tab title is

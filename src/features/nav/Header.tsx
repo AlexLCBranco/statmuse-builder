@@ -6,10 +6,6 @@ import styles from './Header.module.css'
 
 interface Props {
   query: QueryState
-  canBack: boolean
-  canForward: boolean
-  onBack: () => void
-  onForward: () => void
   /** Jumps to another place. */
   onGo: (query: QueryState) => void
   /** Small tools at the right end (the defaults gear). */
@@ -30,22 +26,13 @@ const ICONS: Record<Mode, ReactNode> = {
 }
 
 /**
- * The header: back / forward, the places, and the small tools on the right,
- * all on one line. Always at the top, always the same height, on every
+ * The header: the places, and the small tools on the right, on one line. Always at the top, always the same height, on every
  * screen; the rows under it scroll away.
  */
-export function Header({ query, canBack, canForward, onBack, onForward, onGo, end }: Props) {
+export function Header({ query, onGo, end }: Props) {
   return (
     <header className={styles.header} data-testid="top-bar">
       <h1 className="visually-hidden">StatMuse Builder</h1>
-      <span className={styles.history} role="group" aria-label="Page history" data-testid="page-history">
-        <button type="button" className={styles.historyButton} disabled={!canBack} aria-label="Back" title={canBack ? 'Back to the page before' : 'Nothing to go back to'} onClick={onBack}>
-          ←
-        </button>
-        <button type="button" className={styles.historyButton} disabled={!canForward} aria-label="Forward" title={canForward ? 'Forward again' : 'Nothing to go forward to'} onClick={onForward}>
-          →
-        </button>
-      </span>
       <nav className={styles.places} aria-label="Places" data-testid="where-tabs">
         {PLACES.map((place) => {
           const on = place.mode === query.mode

@@ -26,7 +26,7 @@ export function App() {
   const { defaults, save: saveDefaults, reset: resetDefaults } = useDefaults()
   // The plain address starts from the saved default selections, if any.
   const start = useMemo(() => startQuery(defaults), [defaults])
-  const { query, go, canBack, canForward, back, forward } = useUrlQuery(start)
+  const { query, go } = useUrlQuery(start)
   const { saved, add, removeRecent, pin, unpin } = useSaved()
   const askRef = useRef<HTMLAnchorElement>(null)
   const mainRef = useRef<HTMLElement>(null)
@@ -80,10 +80,6 @@ export function App() {
     <div className={styles.page}>
       <Header
         query={query}
-        canBack={canBack}
-        canForward={canForward}
-        onBack={back}
-        onForward={forward}
         onGo={jump}
         end={<DefaultsMenu onSave={() => saveDefaults(query)} onReset={factoryReset} />}
       />
