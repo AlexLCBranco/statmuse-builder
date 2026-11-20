@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-20, v0.21.0_
+_Last updated: 2026-11-20, v0.22.0_
 
 ## What it is
 
@@ -46,8 +46,7 @@ Layers: `app -> features -> lib -> domain -> styles`
     ranked list
   - `slug.ts`, `playerSearch.ts`, `teamSearch.ts`, `options.ts` (chips, teams)
   - `url.ts` — the screen in the address bar: `QueryState` to `?a=b` and back
-  - `nav.ts` — the shared header's rules: the places, the breadcrumb and its
-    neighbour lists, the "Go anywhere" search, the tab title
+  - `nav.ts` — the header's rules: the places and the tab title
   - `bio.ts` — the draft / college / hometown line: who gets one, how it
     reads, its links
   - `sites.ts` — the "Other sites" buttons: which page of ESPN,
@@ -60,8 +59,7 @@ Layers: `app -> features -> lib -> domain -> styles`
     own chunk, loaded after a player is picked)
 - `lib/` — browser helpers: safe localStorage, clipboard, build info, the
   font wait before first paint, `useDismiss` (close on Escape / outside).
-- `features/` — the shared header (`nav/`: back / forward, breadcrumb, Go
-  anywhere, places); question card; the background line (`bio/`); the
+- `features/` — the header (`nav/`: back / forward, places); question card; the background line (`bio/`); the
   other-sites row (`sites/`); filters (chips and switches, player and team
   comboboxes, their shared dropdown `SuggestionList`); Recent + Pinned list;
   the default-selections gear and popover.
@@ -70,8 +68,15 @@ Layers: `app -> features -> lib -> domain -> styles`
 - `reference/statmuse-builder.html` — the original single-file build this was
   ported from.
 
-## What works now (v0.21.0)
+## What works now (v0.22.0)
 
+- **One-line header** (v0.22.0): the breadcrumb and the "Go anywhere"
+  search (Ctrl+K) are removed; the owner found them unnecessary on a site
+  with two places. The header is one line, always on top: back / forward,
+  the two places (**Player** and **Team leaders**), the defaults gear at the
+  right. 51px tall (59px under 700px wide, where the places are icons with
+  labels). This app no longer follows backlogkit's `NAV_PATTERN.md` for the
+  header's first line
 - **Other sites** (v0.21.0, SM-5): an "Other sites" row under the action
   buttons, shown once there is a player or team. Each button names the site
   and what opens; the hover says more. All free, no sign-in:
@@ -111,20 +116,16 @@ Layers: `app -> features -> lib -> domain -> styles`
   trades and signings, like the player list
 - **Shared layout** (v0.19.0, SM-6; backlogkit's `NAV_PATTERN.md`, same
   build as footykit's FK-65 in this app's colours and 44px targets): a
-  header always on top, the same height on every screen (100px; 157px under
-  700px wide): back / forward (the app's own pages), a breadcrumb
-  ("Player › LeBron James › Averages"; each part opens its neighbours: the
-  places, the recent players or all 31 teams, the views), "Go anywhere"
-  (Ctrl+K: players, teams, a team's leaders, places, pinned and recent
-  searches) and the defaults gear; under them the two places, **Player** and
-  **Team leaders** (the old Mode switch). The view switch is labelled **How**
+  header always on top, the same height on every screen: back / forward
+  (the app's own pages), the two places, **Player** and **Team leaders**
+  (the old Mode switch), and the defaults gear (its breadcrumb and "Go
+  anywhere" search were removed in v0.22.0). The view switch is labelled **How**
   and sits right of the player box. On a phone the places are icons with
-  labels, the breadcrumb shows its last two parts and search is an icon;
-  nothing is in a hidden menu.
+  labels; nothing is in a hidden menu.
   **Every choice is in the address bar** (`?player=LeBron+James&stat=points`;
   only what differs from the factory defaults): a reload or a shared link
   shows the same screen, and back / forward step through pages (a place, a
-  view, a jump from the header or a saved search is a page; a chip or a
+  view or a saved search is a page; a chip or a
   typed letter only updates the current one). The plain address is the
   start screen (the saved defaults), so old links work. The tab title is
   the question. The first paint waits for the web fonts (1.2s at most), so

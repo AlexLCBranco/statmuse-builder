@@ -330,15 +330,14 @@ for (const viewport of [
       const closed = await sizes()
       expect(closed.page).toEqual([0, 0, 0])
 
-      // The gear is on the header's first line, at its right edge (SM-6).
+      // The gear is in the header, at its right edge.
       const gearBox = (await gear(page).boundingBox())!
       const gutter = viewport.width < 640 ? 16 : 24
       expect(Math.abs(viewport.width - gutter - (gearBox.x + gearBox.width))).toBeLessThanOrEqual(1)
-      expect(gearBox.y).toBe(6)
+      // Under the header's 6px top padding; centred beside the taller places on a phone.
+      expect(gearBox.y).toBe(viewport.width <= 700 ? 10 : 6)
       expect(gearBox.width).toBeGreaterThanOrEqual(44)
       expect(gearBox.height).toBeGreaterThanOrEqual(44)
-      const searchBox = (await page.getByTestId('go-anywhere').boundingBox())!
-      expect(searchBox.y).toBe(gearBox.y)
 
       await gear(page).click()
       await expect(menu(page)).toBeVisible()

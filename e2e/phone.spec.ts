@@ -218,7 +218,7 @@ test('a question built by tapping gives the same StatMuse link as on desktop', {
   await expect(recent(page).getByRole('link')).toHaveText(['Jayson Tatum points in the 4th quarter at home vs Lakers in wins last 10 games'])
 })
 
-// ---- SM-6: the shared header on a phone (NAV_PATTERN.md, sections 4 and 6) ----
+// ---- The header on a phone: one line ----
 
 const PHONE_PAGES: [name: string, url: string][] = [
   ['Player, empty', '/'],
@@ -234,7 +234,7 @@ test('the header fits at 390px on every main page: all places visible, nothing i
     const header = page.getByTestId('top-bar')
     const box = (await header.boundingBox())!
     // Same place, same size, on every page.
-    expect([box.x, box.y, box.width, box.height], name).toEqual([0, 0, 390, 157])
+    expect([box.x, box.y, box.width, box.height], name).toEqual([0, 0, 390, 59])
     expect(await header.evaluate((el) => el.scrollWidth), name).toBeLessThanOrEqual(390)
     for (const tab of ['Player', 'Team leaders']) {
       await expect(place(page, tab), name).toBeInViewport({ ratio: 1 })
@@ -242,14 +242,13 @@ test('the header fits at 390px on every main page: all places visible, nothing i
       await expect(place(page, tab).locator('svg'), name).toBeVisible()
       await expect(place(page, tab), name).toHaveText(tab)
     }
-    await expect(page.getByTestId('go-anywhere'), name).toBeInViewport({ ratio: 1 })
+    // No breadcrumb and no search button.
+    await expect(page.getByTestId('breadcrumb'), name).toHaveCount(0)
+    await expect(page.getByTestId('go-anywhere'), name).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Default selections' }), name).toBeInViewport({ ratio: 1 })
     await expect(page.getByTestId('page-history').getByRole('button'), name).toHaveCount(2)
     // No hamburger: nothing in the header opens a hidden menu of places.
     await expect(header.getByRole('button', { name: /menu/i }), name).toHaveCount(0)
-    // The breadcrumb shows its last two parts.
-    const shown = await page.getByTestId('crumb').evaluateAll((parts) => parts.filter((part) => getComputedStyle(part).display !== 'none').length)
-    expect(shown, name).toBe(2)
     await expectFits(page, testInfo, `header-${name}`)
 
     // Still on top after the page under it scrolls.
@@ -259,46 +258,30 @@ test('the header fits at 390px on every main page: all places visible, nothing i
   }
 })
 
-test('the header works by tap: places, breadcrumb lists, Go anywhere, back', async ({ page }, testInfo) => {
+test('the header works by tap: places, back', async ({ page }) => {
   await playerBox(page).fill('LeBron James')
   await playerBox(page).blur()
   await place(page, 'Team leaders').tap()
   await expect(place(page, 'Team leaders')).toHaveAttribute('aria-current', 'page')
   await expect(page).toHaveURL(/mode=leaders/)
-
-  // The team list opens inside the screen, each row finger-sized.
-  const crumb = page.getByTestId('crumb-btn')
-  await crumb.last().tap()
-  const menu = page.getByTestId('crumb-menu')
-  await expect(menu.getByRole('menuitem')).toHaveCount(31)
-  const menuBox = (await menu.boundingBox())!
-  expect(menuBox.x).toBeGreaterThanOrEqual(0)
-  expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(390)
-  expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(844)
-  expect((await menu.getByRole('menuitem').first().boundingBox())!.height).toBeGreaterThanOrEqual(44)
-  await expectFits(page, testInfo, 'breadcrumb-list')
-  await menu.getByRole('menuitem', { name: 'Celtics', exact: true }).tap()
+  await page.getByRole('button', { name: 'Show the team list' }).tap()
+  await page.getByRole('listbox', { name: 'Leader teams' }).getByRole('option', { name: 'Celtics', exact: true }).tap()
   await expect(page.getByTestId('question')).toHaveText('Celtics points leaders')
+  await place(page, 'Player').tap()
+  await expect(page.getByTestId('question')).toHaveText('LeBron James points')
 
-  // Search is an icon button; its box fits the screen.
-  const go = (await page.getByTestId('go-anywhere').boundingBox())!
-  expect([go.width, go.height]).toEqual([44, 44])
-  await page.getByTestId('go-anywhere').tap()
-  await page.getByTestId('go-input').fill('jokic')
-  const dialog = (await page.getByTestId('go-dialog').boundingBox())!
-  expect(dialog.x).toBeGreaterThanOrEqual(0)
-  expect(dialog.x + dialog.width).toBeLessThanOrEqual(390)
-  await expectFits(page, testInfo, 'go-anywhere')
-  const hit = page.getByTestId('go-item').first()
-  expect((await hit.boundingBox())!.height).toBeGreaterThanOrEqual(44)
-  await hit.tap()
-  await expect(page.getByTestId('question')).toHaveText('Nikola Jokic points')
+  // Every header button is finger-sized.
+  for (const button of await page.getByTestId('top-bar').getByRole('button').all()) {
+    const box = (await button.boundingBox())!
+    expect(box.height).toBeGreaterThanOrEqual(44)
+    expect(box.width).toBeGreaterThanOrEqual(44)
+  }
 
   // Back, twice: the leaders page, then where it started.
-  await page.getByTestId('page-history').getByRole('button', { name: 'Back' }).tap()
+  const back = page.getByTestId('page-history').getByRole('button', { name: 'Back' })
+  await back.tap()
   await expect(page.getByTestId('question')).toHaveText('Celtics points leaders')
-  await page.getByTestId('page-history').getByRole('button', { name: 'Back' }).tap()
-  await page.getByTestId('page-history').getByRole('button', { name: 'Back' }).tap()
+  await back.tap()
   await expect(page.getByTestId('question')).toHaveText('LeBron James stats')
 })
 

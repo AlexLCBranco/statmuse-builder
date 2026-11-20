@@ -903,10 +903,18 @@ async function expectCleanLayout(page: Page) {
       const box = el.getBoundingClientRect()
       if (box.left < 0 || box.right > doc.clientWidth) found.push(`outside the window: ${name(el)}`)
     }
+    // The part of a control that shows: its column cuts off what is scrolled
+    // out of it (a button half under the header is not on top of the header).
+    const shown = (el: Element) => {
+      const r = el.getBoundingClientRect()
+      const scroller = el.closest('main, aside ul')?.getBoundingClientRect()
+      if (!scroller) return r
+      return { left: r.left, right: r.right, top: Math.max(r.top, scroller.top), bottom: Math.min(r.bottom, scroller.bottom) }
+    }
     for (let i = 0; i < controls.length; i++) {
       for (let j = i + 1; j < controls.length; j++) {
-        const a = controls[i]!.getBoundingClientRect()
-        const b = controls[j]!.getBoundingClientRect()
+        const a = shown(controls[i]!)
+        const b = shown(controls[j]!)
         // More than a pixel in common in both directions.
         const acrossBy = Math.min(a.right, b.right) - Math.max(a.left, b.left)
         const downBy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)

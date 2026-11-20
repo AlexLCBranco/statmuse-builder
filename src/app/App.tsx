@@ -80,13 +80,11 @@ export function App() {
     <div className={styles.page}>
       <Header
         query={query}
-        saved={saved}
         canBack={canBack}
         canForward={canForward}
         onBack={back}
         onForward={forward}
         onGo={jump}
-        onPickSubject={() => focusFirst()}
         end={<DefaultsMenu onSave={() => saveDefaults(query)} onReset={factoryReset} />}
       />
 

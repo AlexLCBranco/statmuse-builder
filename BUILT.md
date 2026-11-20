@@ -5,6 +5,8 @@ Entries dated before 2026-11-16 were backfilled from the git commit messages (da
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
 ## 2026-11-20
+- Header is one line: the breadcrumb and "Go anywhere" search are gone (v0.22.0)
+  The top of the page is now a single short line: back / forward, Player · Team leaders, and the gear.
 - SM-5 — Links to other stats sites, not only StatMuse (v0.21.0)
   Under the question, an "Other sites" row opens the same player, team or league on ESPN (every split, or every game, in one table), Basketball-Reference (the whole career, a team's season, the league leaders) and CraftedNBA (shot chart and skill ratings).
 - SM-4 — Draft, college and hometown next to Rotations (v0.20.0)

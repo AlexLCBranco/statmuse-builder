@@ -3,11 +3,12 @@ import { mkdirSync } from 'node:fs'
 import { expect, test, type Page } from './test.js'
 
 /**
- * SM-6: the shared layout (backlogkit's NAV_PATTERN.md, section 6). The
- * pinned header on every main page; every place, How option and breadcrumb
- * part navigating, with the address round-tripping; speed; no layout shift;
- * no <select>; named icon buttons; "Go anywhere"; and a screenshot of each
- * main page for the build report. The 390px checks are in phone.spec.ts.
+ * The header and the address bar. The pinned one-line header on every main
+ * page (back / forward, the places, the gear; no breadcrumb and no "Go
+ * anywhere" search, removed in v0.22.0); every place and How option
+ * navigating, with the address round-tripping; speed; no layout shift;
+ * no <select>; named icon buttons; and a screenshot of each main page for
+ * the build report. The 390px checks are in phone.spec.ts.
  */
 
 const BUSIEST =
@@ -24,14 +25,12 @@ const MAIN: [name: string, url: string][] = [
   ['Player, every filter', BUSIEST],
 ]
 
-const HEADER_H = 100
+const HEADER_H = 51
 
 const question = (page: Page) => page.getByTestId('question')
 const header = (page: Page) => page.getByTestId('top-bar')
 const place = (page: Page, mode: 'player' | 'leaders') => page.getByTestId(`where-${mode}`)
 const how = (page: Page, name: string) => page.getByRole('group', { name: 'How', exact: true }).getByRole('button', { name, exact: true })
-const crumbs = (page: Page) => page.getByTestId('crumb-btn')
-const crumbMenu = (page: Page) => page.getByTestId('crumb-menu')
 const history = (page: Page, name: 'Back' | 'Forward') => page.getByTestId('page-history').getByRole('button', { name })
 
 /** Console errors and crashes while the test runs. */
@@ -68,8 +67,12 @@ test.describe('at 1366x768', () => {
       await page.goto(url)
       await expect(header(page), name).toBeVisible()
       await expect(page.getByTestId('where-tabs').getByRole('button'), name).toHaveCount(2)
-      await expect(page.getByTestId('go-anywhere'), name).toBeVisible()
-      await expect(page.getByTestId('breadcrumb'), name).toBeVisible()
+      // One line: no breadcrumb, no "Go anywhere" search (Ctrl+K opens nothing).
+      await expect(page.getByTestId('breadcrumb'), name).toHaveCount(0)
+      await expect(page.getByTestId('go-anywhere'), name).toHaveCount(0)
+      await page.keyboard.press('Control+k')
+      await expect(page.getByRole('dialog'), name).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Default selections' }), name).toBeVisible()
       await expect(history(page, 'Back'), name).toBeVisible()
       const box = (await header(page).boundingBox())!
       expect([box.x, box.y, box.width, box.height], name).toEqual([0, 0, 1366, HEADER_H])
@@ -144,12 +147,11 @@ test('saved default selections: the plain address starts from them, and a link s
   await expectReloadSame(page)
 })
 
-test('every place, How option and breadcrumb part navigates; reload, back and forward work', { tag: '@live' }, async ({ page }) => {
+test('every place and How option navigates; reload, back and forward work', { tag: '@live' }, async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto('/?player=LeBron+James&stat=points')
   await expect(history(page, 'Back')).toBeDisabled()
   await expect(history(page, 'Forward')).toBeDisabled()
-  await expect(crumbs(page)).toHaveText(['Player', 'LeBron James', 'Averages'])
   await expect(page).toHaveTitle('LeBron James points — StatMuse Builder')
 
   // The places.
@@ -157,39 +159,28 @@ test('every place, How option and breadcrumb part navigates; reload, back and fo
   await expect(place(page, 'leaders')).toHaveAttribute('aria-current', 'page')
   await expect(place(page, 'player')).not.toHaveAttribute('aria-current', 'page')
   await expect(page).toHaveURL(/mode=leaders/)
-  await expect(crumbs(page)).toHaveText(['Team leaders', 'Pick a team'])
   await expect(page).toHaveTitle('Team leaders — StatMuse Builder')
   await expectReloadSame(page)
 
-  // The team part: the league and all 30 teams; picking one fills the team box.
-  await crumbs(page).nth(1).click()
-  await expect(crumbMenu(page).getByRole('menuitem')).toHaveCount(31)
-  await crumbMenu(page).getByRole('menuitem', { name: 'Lakers', exact: true }).click()
-  await expect(crumbMenu(page)).toHaveCount(0)
+  // Picking a team stays on the same page.
+  await page.getByRole('button', { name: 'Show the team list' }).click()
+  await page.getByRole('listbox', { name: 'Leader teams' }).getByRole('option', { name: 'Lakers', exact: true }).click()
   await expect(page).toHaveURL(/mode=leaders.*team=Lakers/)
   await expect(question(page)).toHaveText('Lakers points leaders')
-  await expect(page.getByRole('combobox', { name: 'Team', exact: true })).toHaveValue('Lakers')
   await expectReloadSame(page)
 
-  // The place part: the other place. Escape closes a list.
-  await crumbs(page).nth(0).click()
-  await page.keyboard.press('Escape')
-  await expect(crumbMenu(page)).toHaveCount(0)
-  await crumbs(page).nth(0).click()
-  await expect(crumbMenu(page).getByRole('menuitem')).toHaveText(['Player', 'Team leaders'])
-  await crumbMenu(page).getByRole('menuitem', { name: 'Player', exact: true }).click()
+  // Back to the other place: the player is still there.
+  await place(page, 'player').click()
   await expect(place(page, 'player')).toHaveAttribute('aria-current', 'page')
   await expect(question(page)).toHaveText('LeBron James points')
 
-  // How: the switch, then the breadcrumb's last part.
+  // How: the switch, both ways.
   await how(page, 'Game by game').click()
   await expect(how(page, 'Game by game')).toHaveAttribute('aria-pressed', 'true')
   await expect(page).toHaveURL(/view=gamelog/)
-  await expect(crumbs(page)).toHaveText(['Player', 'LeBron James', 'Game by game'])
   await expect(question(page)).toHaveText('LeBron James points game log')
   await expectReloadSame(page)
-  await crumbs(page).nth(2).click()
-  await crumbMenu(page).getByRole('menuitem', { name: 'Averages', exact: true }).click()
+  await how(page, 'Averages').click()
   await expect(how(page, 'Averages')).toHaveAttribute('aria-pressed', 'true')
   await expect(page).not.toHaveURL(/view=/)
 
@@ -224,100 +215,6 @@ test('every place, How option and breadcrumb part navigates; reload, back and fo
   expect(errors).toEqual([])
 })
 
-test('the player part lists recent players; an empty one puts the cursor in the box', async ({ page }) => {
-  await page.goto('/')
-  await crumbs(page).nth(1).click()
-  await expect(crumbMenu(page)).toHaveCount(0)
-  await expect(page.getByRole('combobox', { name: 'Player', exact: true })).toBeFocused()
-
-  await page.evaluate(() =>
-    localStorage.setItem(
-      'smb.recent',
-      JSON.stringify([
-        { question: 'Stephen Curry points', query: { mode: 'player', view: 'averages', player: 'Stephen Curry', stat: 'points' } },
-        { question: 'Nikola Jokic stats', query: { mode: 'player', view: 'averages', player: 'Nikola Jokic' } },
-      ]),
-    ),
-  )
-  await page.goto('/?player=LeBron+James&result=in+wins')
-  await crumbs(page).nth(1).click()
-  await expect(crumbMenu(page).getByRole('menuitem')).toHaveText(['LeBron James', 'Stephen Curry', 'Nikola Jokic'])
-  await crumbMenu(page).getByRole('menuitem', { name: 'Nikola Jokic' }).click()
-  // Only the player changes; the filter stays.
-  await expect(question(page)).toHaveText('Nikola Jokic stats in wins')
-  await expect(page).toHaveURL(/player=Nikola\+Jokic&result=in\+wins/)
-})
-
-test('Go anywhere (Ctrl+K): a player, a team, its leaders, a saved search; Escape closes', { tag: '@live' }, async ({ page }) => {
-  const errors = watchErrors(page)
-  await page.goto('/?quarter=in+the+4th+quarter')
-  await page.evaluate(() =>
-    localStorage.setItem(
-      'smb.pinned',
-      JSON.stringify([{ question: 'Stephen Curry points career', query: { mode: 'player', view: 'averages', player: 'Stephen Curry', stat: 'points', period: 'career' } }]),
-    ),
-  )
-  await page.reload()
-  const input = page.getByTestId('go-input')
-  const items = page.getByTestId('go-item')
-
-  // Ctrl+K: the box opens with the cursor in it, listing places and saved searches.
-  await page.keyboard.press('Control+k')
-  await expect(input).toBeFocused()
-  await expect(items).toContainText(['Player', 'Team leaders', 'League leaders (NBA)', 'Averages', 'Game by game', 'Stephen Curry points career'])
-  // A player (case ignored), Enter: the filters stay.
-  await input.fill('LEBRON')
-  await expect(items.first()).toContainText('LeBron James')
-  await input.press('Enter')
-  await expect(page.getByTestId('go-dialog')).toHaveCount(0)
-  await expect(question(page)).toHaveText('LeBron James stats in the 4th quarter')
-  await expect(page).toHaveURL(/player=LeBron\+James&quarter=/)
-
-  // The button; a team's leaders by city; arrows and Enter.
-  await page.getByTestId('go-anywhere').click()
-  await input.fill('boston')
-  await expect(items).toContainText(['Celtics', 'Celtics leaders'])
-  await input.press('ArrowDown')
-  await expect(items.nth(1)).toHaveAttribute('aria-selected', 'true')
-  await input.press('Enter')
-  await expect(question(page)).toHaveText('Celtics points leaders in the 4th quarter')
-  await expect(place(page, 'leaders')).toHaveAttribute('aria-current', 'page')
-
-  // A click on a hit; a team in the Player place.
-  await page.keyboard.press('Control+k')
-  await input.fill('lakers')
-  await items.first().click()
-  // Coming from leaders, the stat stays on points.
-  await expect(question(page)).toHaveText('Lakers points in the 4th quarter')
-
-  // A saved search opens whole.
-  await page.keyboard.press('Control+k')
-  await input.fill('curry career')
-  await input.press('Enter')
-  await expect(question(page)).toHaveText('Stephen Curry points career')
-
-  // A place.
-  await page.keyboard.press('Control+k')
-  await input.fill('league')
-  await input.press('Enter')
-  await expect(question(page)).toHaveText('NBA points leaders career')
-
-  // Nothing found says so; Escape and a click outside close it.
-  await page.keyboard.press('Control+k')
-  await input.fill('zzzz')
-  await expect(page.getByTestId('go-list')).toHaveText('Nothing matches "zzzz"')
-  await page.keyboard.press('Escape')
-  await expect(page.getByTestId('go-dialog')).toHaveCount(0)
-  await page.getByTestId('go-anywhere').click()
-  await page.mouse.click(5, 400)
-  await expect(page.getByTestId('go-dialog')).toHaveCount(0)
-
-  // Each jump was a page: Back goes through them.
-  await history(page, 'Back').click()
-  await expect(question(page)).toHaveText('Stephen Curry points career')
-  expect(errors).toEqual([])
-})
-
 test('a click updates the screen in under 100 ms on the busiest page', async ({ page }) => {
   await page.goto(BUSIEST)
   await page.evaluate(() => document.fonts.ready)
@@ -337,12 +234,10 @@ test('a click updates the screen in under 100 ms on the busiest page', async ({ 
   const toPlayer = await timed('[data-testid="where-player"]', '[data-testid="where-player"][aria-current="page"]')
   const gameLog = await timed('[aria-label="How"] button:nth-child(2)', '[aria-label="How"] button:nth-child(2)[aria-pressed="true"]')
   const chip = await timed('[aria-label="Period"] button:nth-child(2)', '[aria-label="Period"] button:nth-child(2)[aria-pressed="true"]')
-  const crumb = await timed('[data-testid="crumb"]:last-child [data-testid="crumb-btn"]', '[data-testid="crumb-menu"]')
-  const jump = await timed('[data-testid="crumb-menu"] [role="menuitem"]:first-child', '[aria-label="How"] button:first-child[aria-pressed="true"]')
   console.log(
-    `SM-6 timings (ms): to Team leaders ${toLeaders.toFixed(0)}, to Player ${toPlayer.toFixed(0)}, How ${gameLog.toFixed(0)}, chip ${chip.toFixed(0)}, breadcrumb list ${crumb.toFixed(0)}, jump ${jump.toFixed(0)}`,
+    `SM-6 timings (ms): to Team leaders ${toLeaders.toFixed(0)}, to Player ${toPlayer.toFixed(0)}, How ${gameLog.toFixed(0)}, chip ${chip.toFixed(0)}`,
   )
-  for (const ms of [toLeaders, toPlayer, gameLog, chip, crumb, jump]) expect(ms).toBeLessThan(100)
+  for (const ms of [toLeaders, toPlayer, gameLog, chip]) expect(ms).toBeLessThan(100)
 })
 
 test('no layout shift on load or after navigating', async ({ page }) => {
