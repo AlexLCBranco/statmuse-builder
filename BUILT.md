@@ -4,6 +4,10 @@ Shipped work only, newest first. Planned work is in `FEATURE_BACKLOG.md`, never 
 Entries dated before 2026-11-16 were backfilled from the git commit messages (data, docs, test-only, merge and
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
+## 2026-11-24
+### Internal
+- docs: new "Blocked" rule in CLAUDE.md: a Blocked line that only waits for other items unblocks itself at the next build; a question needs a "?" and still waits for the owner
+
 ## 2026-11-20
 - Back / forward arrows removed from the header (v0.23.0)
   The top line is now just Player · Team leaders and the gear; the browser's own back and forward buttons still step through the pages.
