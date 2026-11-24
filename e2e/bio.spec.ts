@@ -1,8 +1,8 @@
 import { expect, test, type Page } from './test.js'
 
 /**
- * SM-4: the player's draft spot, college and hometown beside the Rotations
- * button. The data is ESPN's, synced into the build (scripts/sync-bios.mjs),
+ * SM-4: the player's draft spot, college and hometown after the action
+ * buttons. The data is ESPN's, synced into the build (scripts/sync-bios.mjs),
  * so these tests read the real synced records; the last test checks one of
  * them against ESPN itself (live runs only).
  */
@@ -21,7 +21,7 @@ const more = (page: Page) => page.getByRole('button', { name: /^More about where
 test.describe('at 1280x800', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
 
-  test('pick a player: the line and both links appear right of Rotations', { tag: '@live' }, async ({ page }) => {
+  test('pick a player: the line and both links appear right after the action buttons', { tag: '@live' }, async ({ page }) => {
     await playerBox(page).click()
     await playerBox(page).pressSequentially('jalen bru')
     await page.getByRole('listbox', { name: 'Players and teams', exact: true }).getByRole('option', { name: 'Jalen Brunson' }).click()
@@ -36,12 +36,14 @@ test.describe('at 1280x800', () => {
     await expect(college).toHaveAttribute('target', '_blank')
     await expect(college).toHaveAttribute('title', 'See the Villanova team of 2017-18')
 
-    // On the Rotations button's line, to its right, inside the card.
-    const rotations = (await page.getByTestId('rotations').boundingBox())!
+    // Right after the last action button: at 1280 the card has no room for it
+    // on that line, so it starts the next line, under Ask, inside the card.
+    const clear = (await page.getByRole('button', { name: 'Clear all' }).boundingBox())!
+    const ask = (await page.getByRole('link', { name: 'Ask StatMuse' }).boundingBox())!
     const slot = (await bio(page).boundingBox())!
     const card = (await page.getByRole('region', { name: 'Your question' }).boundingBox())!
-    expect(slot.x).toBeGreaterThanOrEqual(rotations.x + rotations.width)
-    expect(Math.abs(slot.y + slot.height / 2 - (rotations.y + rotations.height / 2))).toBeLessThanOrEqual(1)
+    expect(slot.y).toBeGreaterThanOrEqual(clear.y + clear.height)
+    expect(Math.abs(slot.x - ask.x)).toBeLessThanOrEqual(1)
     expect(slot.x + slot.width).toBeLessThanOrEqual(card.x + card.width)
     // Everything is still on one screen: the page does not scroll.
     expect(await page.evaluate(() => [document.documentElement.scrollHeight - innerHeight, scrollY])).toEqual([0, 0])

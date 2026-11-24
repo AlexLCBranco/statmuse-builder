@@ -277,7 +277,7 @@ test('Swap players: shows only with both players, swaps them, keeps the filters'
   await expect(question(page)).toHaveText('Devin Booker points vs Luka Doncic in wins career')
   await expect(page.getByTestId('question-url')).toHaveText(`${ASK}devin-booker-points-vs-luka-doncic-in-wins-career`)
   await expect(askLink(page)).toHaveAttribute('href', `${ASK}devin-booker-points-vs-luka-doncic-in-wins-career`)
-  await expect(page.getByTestId('rotations')).toHaveText('Devin Booker rotations ↗')
+  await expect(page.getByTestId('site-rotations')).toHaveAttribute('href', `${ROTATIONKIT}#/player?name=Devin%20Booker`)
   await expect(chip(page, 'Stat', 'Points')).toHaveAttribute('aria-pressed', 'true')
   await expect(chip(page, 'Result', 'Wins')).toHaveAttribute('aria-pressed', 'true')
   await expect(chip(page, 'Period', 'Career')).toHaveAttribute('aria-pressed', 'true')
@@ -307,7 +307,7 @@ test('a team in the Player box: team stats with every filter', async ({ page }) 
   await expect(question(page)).toHaveText('Timberwolves stats without Anthony Edwards this season')
   expect(await ask(page)).toBe(`${ASK}timberwolves-stats-without-anthony-edwards-this-season`)
   // Rotations goes to the team page, not a player called "Timberwolves".
-  await expect(page.getByTestId('rotations')).toHaveAttribute('href', `${ROTATIONKIT}#/team/MIN`)
+  await expect(page.getByTestId('site-rotations')).toHaveAttribute('href', `${ROTATIONKIT}#/team/MIN`)
 
   // Every filter is still offered with a team subject.
   for (const name of ['Stat', 'Quarter', 'Court', 'Result', 'Period']) await expect(group(page, name)).toBeVisible()
@@ -433,51 +433,48 @@ test('league leaders: "NBA ... leaders", without "last N games"', async ({ page 
 })
 
 const ROTATIONKIT = 'https://rotationkit.vercel.app/'
-const rotations = (page: Page) => page.getByTestId('rotations')
+const rotations = (page: Page) => page.getByTestId('site-rotations')
+const actions = (page: Page) => page.getByRole('region', { name: 'Your question' }).locator(':is(a, button):not([data-testid="bio"] *, [data-testid="sites"] *)')
 
-test('rotations button: the same player or team on rotationkit', async ({ page }) => {
-  // Empty box: shown, disabled, no link.
-  await expect(rotations(page)).toHaveText('Rotations ↗')
-  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
-  await expect(rotations(page)).not.toHaveAttribute('href')
+test('Hoop Rotations (SM-7): first in Other sites, the same player or team on rotationkit', async ({ page }) => {
+  // Not among the action buttons any more, and no button with an empty box.
+  await expect(actions(page)).toHaveText(['Ask StatMuse ↗', 'Copy question', 'Copy link', 'Clear all'])
+  await expect(page.getByTestId('rotations')).toHaveCount(0)
+  await expect(rotations(page)).toHaveCount(0)
 
   // Player mode: the typed name counts; filters are not carried over.
   await playerBox(page).fill("De'Aaron Fox")
   await chip(page, 'Court', 'Home').click()
-  await expect(rotations(page)).toHaveText("De'Aaron Fox rotations ↗")
+  const sites = page.getByRole('group', { name: 'Other sites', exact: true })
+  await expect(sites.getByRole('link').first()).toHaveText('Hoop RotationsWhen he plays↗')
   await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/player?name=De'Aaron%20Fox`)
   await expect(rotations(page)).toHaveAttribute('target', '_blank')
-  await expect(rotations(page)).toHaveAttribute('rel', 'noopener')
-  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'false')
+  await expect(rotations(page)).toHaveAttribute('title', "Opens De'Aaron Fox's rotations on Hoop Rotations: who was on the court, minute by minute.")
+  await expect(actions(page)).toHaveText(['Ask StatMuse ↗', 'Copy question', 'Copy link', 'Clear all'])
+  // The name is orange, like the player's name in the question; ESPN's is not.
+  const color = (testId: string) => page.getByTestId(testId).locator('span').first().evaluate((el) => getComputedStyle(el).color)
+  const accent = await page.getByTestId('question').locator('b').first().evaluate((el) => getComputedStyle(el).color)
+  expect(await color('site-rotations')).toBe(accent)
+  expect(await color('site-espn')).not.toBe(accent)
 
   // Game by game: the same link.
   await chip(page, 'How', 'Game by game').click()
   await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/player?name=De'Aaron%20Fox`)
 
-  // Team leaders: disabled until a team is picked, then the team's tricode.
+  // Team leaders: no button until a team is picked, then the team's tricode.
   await place(page, 'Team leaders').click()
-  await expect(rotations(page)).toHaveText('Rotations ↗')
-  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
+  await expect(rotations(page)).toHaveCount(0)
   await teamBox(page).fill('orlando')
   await teamBox(page).press('Enter')
-  await expect(rotations(page)).toHaveText('Magic rotations ↗')
+  await expect(rotations(page)).toHaveText('Hoop RotationsWhen they play↗')
   await expect(rotations(page)).toHaveAttribute('href', `${ROTATIONKIT}#/team/ORL`)
 
-  // League: disabled again.
+  // League: hidden again.
   await teamBox(page).fill('nba')
   await teamBox(page).press('Enter')
   await expect(teamBox(page)).toHaveValue('League (NBA)')
-  await expect(rotations(page)).toHaveText('Rotations ↗')
-  await expect(rotations(page)).toHaveAttribute('aria-disabled', 'true')
-  await expect(rotations(page)).not.toHaveAttribute('href')
-
-  // Clicking the disabled button opens nothing.
-  let popups = 0
-  page.on('popup', () => popups++)
-  // force: Playwright itself refuses to click an aria-disabled element.
-  await rotations(page).click({ force: true })
-  await page.waitForTimeout(300)
-  expect(popups).toBe(0)
+  await expect(sites.getByRole('link').first()).toHaveText(/^ESPN/)
+  await expect(rotations(page)).toHaveCount(0)
 })
 
 test('rotationkit opens the player page for a current player (live site only)', { tag: '@live' }, async ({ browser }) => {
@@ -970,14 +967,13 @@ test.describe('layout at 1920x1080', () => {
     await expectCleanLayout(page)
   })
 
-  test('the action row, Swap players and Rotations included, fits on one line', async ({ page }) => {
+  test('the action row, Swap players included, fits on one line', async ({ page }) => {
     await page.evaluate(() => document.fonts.ready)
     await seedRecent(page, SEEDED)
-    // A long name makes the longest Rotations label; a Vs player shows Swap.
+    // A Vs player shows Swap.
     await playerBox(page).fill('Giannis Antetokounmpo')
     await page.getByRole('combobox', { name: 'Vs player' }).fill('Shai Gilgeous-Alexander')
     await page.getByRole('combobox', { name: 'Vs player' }).blur()
-    await expect(page.getByTestId('rotations')).toHaveText('Giannis Antetokounmpo rotations ↗')
     await expect(page.getByRole('button', { name: 'Swap players' })).toBeVisible()
     // The buttons; the background line (SM-4) takes the room left, or its own line.
     const buttons = page.getByRole('region', { name: 'Your question' }).locator(':is(a, button):not([data-testid="bio"] *, [data-testid="sites"] *)')

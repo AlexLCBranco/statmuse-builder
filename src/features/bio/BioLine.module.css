@@ -1,4 +1,4 @@
-/* The slot right of the Rotations button. Its size never depends on what is
+/* The slot right of the last action button. Its size never depends on what is
    in it (it is there, empty, while the data loads), so it wraps to the next
    line of buttons, or not, the same way before and after. The details box is
    positioned against it. */

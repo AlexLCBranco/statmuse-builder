@@ -4,7 +4,6 @@ import { isLeaders } from '../../domain/availability'
 import { bioPlayer } from '../../domain/bio'
 import { PLAYERS } from '../../domain/data/players'
 import { buildQuestion, canSwapPlayers, isReady, questionParts, tooManyFilters, type QueryState } from '../../domain/query'
-import { rotationsLink } from '../../domain/rotations'
 import { statmuseUrl } from '../../domain/slug'
 import { copyText, selectContents } from '../../lib/clipboard'
 import { BioLine } from '../bio/BioLine'
@@ -31,8 +30,7 @@ export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear, 
   const ready = isReady(query)
   const question = buildQuestion(query)
   const url = statmuseUrl(question)
-  const rotations = rotationsLink(query)
-  // The roster player whose draft, college and hometown show beside Rotations.
+  // The roster player whose draft, college and hometown show after the buttons.
   const bioName = bioPlayer(query, PLAYERS)
   const urlElement = useRef<HTMLDivElement>(null)
   const [toast, setToast] = useState('')
@@ -132,19 +130,6 @@ export function QuestionCard({ query, askRef, onAsk, onMissingSubject, onClear, 
             <span aria-hidden="true">⇄</span> Swap players
           </button>
         )}
-        {/* The same player or team on rotationkit. With nothing to link (no
-            subject, or the league) it has no href, so it can't be followed. */}
-        <a
-          className={`${styles.button} ${styles.rotations}`}
-          href={rotations.href ?? undefined}
-          target="_blank"
-          rel="noopener"
-          aria-disabled={rotations.href === null}
-          role={rotations.href === null ? 'link' : undefined}
-          data-testid="rotations"
-        >
-          {rotations.label} <span aria-hidden="true">↗</span>
-        </a>
         {/* key: a new player starts with the details closed. */}
         {bioName && <BioLine key={bioName} name={bioName} />}
       </div>

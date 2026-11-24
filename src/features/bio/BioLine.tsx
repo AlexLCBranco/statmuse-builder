@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * The player's background beside the Rotations button (SM-4): a short line
+ * The player's background after the action buttons (SM-4): a short line
  * ("Draft 2023, pick 1 (SAS) · No US college · France") whose draft and
  * college parts are links, and the full details in a small box that opens
  * when the mouse is over the line or the "i" button is pressed (phones have

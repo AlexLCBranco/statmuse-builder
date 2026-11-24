@@ -343,7 +343,7 @@ test('the other-sites buttons fit, are finger-sized, and open in a new tab', asy
   await playerBox(page).fill('Shai Gilgeous-Alexander')
   await playerBox(page).blur()
   const sites = page.getByRole('group', { name: 'Other sites', exact: true })
-  await expect(sites.getByRole('link')).toHaveCount(3)
+  await expect(sites.getByRole('link')).toHaveCount(4)
   await sites.scrollIntoViewIfNeeded()
   await expectFits(page, testInfo, 'other-sites')
   for (const link of await sites.getByRole('link').all()) {
@@ -357,10 +357,10 @@ test('the other-sites buttons fit, are finger-sized, and open in a new tab', asy
   expect((await popup).url()).toMatch(/^https:\/\/www\.espn\.com\/nba\/player\/splits\/_\/id\/\d+$/)
   await expect(page.getByTestId('question')).toHaveText('Shai Gilgeous-Alexander stats')
 
-  // A team: two buttons.
+  // A team: three buttons.
   await place(page, 'Team leaders').tap()
   await page.getByRole('button', { name: 'Show the team list' }).tap()
   await page.getByRole('listbox', { name: 'Leader teams' }).getByRole('option', { name: 'Trail Blazers' }).tap()
-  await expect(sites.getByRole('link')).toHaveText(['ESPNWhole team↗', 'Basketball-ReferenceTeam season↗'])
+  await expect(sites.getByRole('link')).toHaveText(['Hoop RotationsWhen they play↗', 'ESPNWhole team↗', 'Basketball-ReferenceTeam season↗'])
   await expectFits(page, testInfo, 'other-sites-team')
 })

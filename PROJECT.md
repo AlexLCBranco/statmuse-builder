@@ -1,6 +1,6 @@
 # StatMuse Builder — project summary
 
-_Last updated: 2026-11-20, v0.23.1_
+_Last updated: 2026-11-24, v0.24.0_
 
 ## What it is
 
@@ -40,8 +40,9 @@ Layers: `app -> features -> lib -> domain -> styles`
   - `recent.ts` — Recent list, pins, recent players/teams, reading saved data
   - `defaults.ts` — default selections: what is saved, checking saved data,
     the starting query
-  - `rotations.ts` — the Rotations button: rotationkit link for the
-    player or team, and the 30 NBA tricodes
+  - `rotations.ts` — the Hoop Rotations button (first in Other sites):
+    rotationkit link for the player or team, the site's placeholder name
+    (`ROTATIONS_SITE_NAME`), and the 30 NBA tricodes
   - `subjectSearch.ts` — Player box suggestions: players and teams in one
     ranked list
   - `slug.ts`, `playerSearch.ts`, `teamSearch.ts`, `options.ts` (chips, teams)
@@ -106,7 +107,7 @@ Layers: `app -> features -> lib -> domain -> styles`
   NBA.com and sites that need its player ids (PBP Stats) are not linked:
   NBA.com refuses scripts, so the ids cannot be checked
 - **Draft, college and hometown** (v0.20.0, SM-4): with a roster player in
-  the Player box (Player place, both views), a line right of the Rotations
+  the Player box (Player place, both views), a line right of the last action
   button: "Draft 2023, pick 1 (SAS) · No US college · France". The draft
   part opens that year's whole draft on Basketball-Reference; the college
   part opens that college team's season on ESPN (every teammate with his
@@ -170,23 +171,23 @@ Layers: `app -> features -> lib -> domain -> styles`
   -> "Devin Booker stats vs Luka Doncic"); every other filter stays. Shown
   only when both boxes are filled (hidden, never disabled), so never in Team
   leaders. Rules: `canSwapPlayers` / `swapPlayers` in `domain/query.ts`.
-  At 1920px the row (Ask, Copy x2, Clear all, Swap, Rotations with a long
-  name) is one line
+  At 1920px the row (Ask, Copy x2, Clear all, Swap) is one line
 
 - **Teams in the Player box** (v0.15.0): in Player mode the box also
   suggests the 30 StatMuse nicknames (marked "Team"), mixed with players by
   match quality (`domain/subjectSearch.ts`); any typed team works. A team
   there asks for team stats with every filter: "Timberwolves stats without
-  Anthony Edwards this season". Rotations then opens the team page. Team
+  Anthony Edwards this season". Hoop Rotations then opens the team page. Team
   leaders mode is unchanged (a team there gives its top players)
 
-- **Rotations button** (v0.14.0): after "Clear all", a link (new tab) to
-  the same player or team on rotationkit, so one search gives both links.
-  Player mode (both views): "<name> rotations ↗" →
+- **Hoop Rotations button** (v0.14.0; moved in v0.24.0, SM-7): the first
+  button of the "Other sites" row, its name in the accent orange, a link
+  (new tab) to the same player or team on rotationkit. Player (both views):
+  "Hoop Rotations · When he plays ↗" →
   `rotationkit.vercel.app/#/player?name=<name>` (the typed name counts).
-  Team leaders: "<team> rotations ↗" → `#/team/<TRICODE>`. League or an
-  empty box: "Rotations ↗", disabled. No filters go across. A long name
-  wraps inside the button on a phone. `e2e:prod` also checks that
+  A team: "When they play ↗" → `#/team/<TRICODE>`. League or an empty box:
+  no button. No filters go across. "Hoop Rotations" is a placeholder name,
+  one constant in `domain/rotations.ts`. `e2e:prod` also checks that
   rotationkit opens Anfernee Simons' page, not "No rotation data"
 
 - **Pressed buttons are orange, not white** (v0.13.0): a pressed chip or

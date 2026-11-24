@@ -5,6 +5,8 @@ Entries dated before 2026-11-16 were backfilled from the git commit messages (da
 spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Feature backlog, built list and ideas").
 
 ## 2026-11-24
+- SM-7 — Hoop Rotations link moves to the "Other sites" row, first and highlighted (v0.24.0)
+  The rotations link is now the first button under "Other sites", with "Hoop Rotations" in orange; it is gone from the row of Copy / Clear buttons.
 ### Internal
 - docs: new "Blocked" rule in CLAUDE.md: a Blocked line that only waits for other items unblocks itself at the next build; a question needs a "?" and still waits for the owner
 

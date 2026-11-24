@@ -24,7 +24,7 @@ import { TEAM_TRICODES } from './rotations'
  * (scripts/check-sites.mjs, and e2e/sites.spec.ts in live runs).
  */
 
-export type Site = 'espn' | 'bbref' | 'crafted'
+export type Site = 'rotations' | 'espn' | 'bbref' | 'crafted'
 
 export interface SiteLink {
   site: Site

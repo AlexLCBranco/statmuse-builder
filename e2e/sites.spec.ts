@@ -15,17 +15,17 @@ test.beforeEach(async ({ context, page }) => {
 
 const playerBox = (page: Page) => page.getByRole('combobox', { name: 'Player', exact: true })
 const sites = (page: Page) => page.getByRole('group', { name: 'Other sites', exact: true })
-const site = (page: Page, name: 'espn' | 'bbref' | 'crafted') => page.getByTestId(`site-${name}`)
+const site = (page: Page, name: 'rotations' | 'espn' | 'bbref' | 'crafted') => page.getByTestId(`site-${name}`)
 
 test.describe('at 1280x800', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
 
-  test('a player: ESPN splits, Basketball-Reference and CraftedNBA; Game by game opens the game log', { tag: '@live' }, async ({ page }) => {
+  test('a player: Hoop Rotations, ESPN splits, Basketball-Reference and CraftedNBA; Game by game opens the game log', { tag: '@live' }, async ({ page }) => {
     // Nothing to link yet.
     await expect(sites(page)).toHaveCount(0)
 
     await playerBox(page).fill('Victor Wembanyama')
-    await expect(sites(page).getByRole('link')).toHaveText(['ESPNHome, away, wins↗', 'Basketball-ReferenceWhole career↗', 'CraftedNBAShot chart↗'])
+    await expect(sites(page).getByRole('link')).toHaveText(['Hoop RotationsWhen he plays↗', 'ESPNHome, away, wins↗', 'Basketball-ReferenceWhole career↗', 'CraftedNBAShot chart↗'])
     await expect(site(page, 'espn')).toHaveAttribute('href', 'https://www.espn.com/nba/player/splits/_/id/5104157')
     await expect(site(page, 'bbref')).toHaveAttribute('href', 'https://www.basketball-reference.com/search/search.fcgi?search=Victor+Wembanyama')
     await expect(site(page, 'crafted')).toHaveAttribute('href', 'https://craftednba.com/players/victor-wembanyama')
@@ -42,16 +42,16 @@ test.describe('at 1280x800', () => {
 
     // Under the action buttons, inside the card, and the page still does not scroll.
     const row = (await sites(page).boundingBox())!
-    const rotations = (await page.getByTestId('rotations').boundingBox())!
+    const clear = (await page.getByRole('button', { name: 'Clear all' }).boundingBox())!
     const card = (await page.getByRole('region', { name: 'Your question' }).boundingBox())!
-    expect(row.y).toBeGreaterThanOrEqual(rotations.y + rotations.height)
+    expect(row.y).toBeGreaterThanOrEqual(clear.y + clear.height)
     expect(row.y + row.height).toBeLessThanOrEqual(card.y + card.height)
     expect(await page.evaluate(() => [document.documentElement.scrollHeight - innerHeight, scrollY])).toEqual([0, 0])
   })
 
   test('a name that is not on a roster: both searches, no CraftedNBA', async ({ page }) => {
     await playerBox(page).fill('Michael Jordan')
-    await expect(sites(page).getByRole('link')).toHaveText(['ESPNSearch↗', 'Basketball-ReferenceWhole career↗'])
+    await expect(sites(page).getByRole('link')).toHaveText(['Hoop RotationsWhen he plays↗', 'ESPNSearch↗', 'Basketball-ReferenceWhole career↗'])
     await expect(site(page, 'espn')).toHaveAttribute('href', 'https://www.espn.com/search/_/q/Michael%20Jordan')
     await expect(site(page, 'bbref')).toHaveAttribute('href', 'https://www.basketball-reference.com/search/search.fcgi?search=Michael+Jordan')
   })
@@ -67,7 +67,7 @@ test.describe('at 1280x800', () => {
   test('a team and the league: the team pages, and the league table sorted by the chosen stat', async ({ page }) => {
     // A team in the Player box.
     await playerBox(page).fill('warriors')
-    await expect(sites(page).getByRole('link')).toHaveText(['ESPNWhole team↗', 'Basketball-ReferenceTeam season↗'])
+    await expect(sites(page).getByRole('link')).toHaveText(['Hoop RotationsWhen they play↗', 'ESPNWhole team↗', 'Basketball-ReferenceTeam season↗'])
     await expect(site(page, 'espn')).toHaveAttribute('href', 'https://www.espn.com/nba/team/stats/_/name/gs')
     await expect(site(page, 'bbref')).toHaveAttribute('href', 'https://www.basketball-reference.com/teams/GSW/2027.html')
 

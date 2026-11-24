@@ -41,7 +41,13 @@
   white-space: nowrap;
 }
 
-/* aria-disabled, like the Rotations button: shown, but nowhere to go. */
+/* The owner's own rotations site (SM-7): its name in the same orange as
+   the player's name in the question. */
+.highlight {
+  color: var(--color-accent);
+}
+
+/* aria-disabled: shown, but nowhere to go. */
 .link[aria-disabled="true"] {
   opacity: 0.45;
   cursor: not-allowed;
