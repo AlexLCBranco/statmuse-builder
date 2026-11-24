@@ -482,8 +482,9 @@ test('rotationkit opens the player page for a current player (live site only)', 
   test.skip(!process.env.BASE_URL, 'checks the external site; runs in e2e:prod')
   const page = await browser.newPage()
   await page.goto(`${ROTATIONKIT}#/player?name=${encodeURIComponent('Anfernee Simons')}`)
-  // rotationkit resolves the name to his team/player-id page.
-  await expect(page).toHaveURL(/#\/player\/[A-Z]{3}\/\d+/, { timeout: 30_000 })
+  // rotationkit resolves the name to his team/player-id page (a path since
+  // late 2026, "#/player/..." before: either form is fine).
+  await expect(page).toHaveURL(/\/player\/[A-Z]{3}\/\d+$/, { timeout: 30_000 })
   await expect(page.getByText('Anfernee Simons').first()).toBeVisible()
   await expect(page.getByText(/No rotation data/)).toHaveCount(0)
   await page.close()

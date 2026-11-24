@@ -8,6 +8,7 @@ spec commits left out). New entries name their backlog ID (see CLAUDE.md, "Featu
 - SM-7 — Hoop Rotations link moves to the "Other sites" row, first and highlighted (v0.24.0)
   The rotations link is now the first button under "Other sites", with "Hoop Rotations" in orange; it is gone from the row of Copy / Clear buttons.
 ### Internal
+- test: the @live rotationkit check accepts its new path addresses (`/player/PHI/…`, no `#`), which made it time out
 - docs: new "Blocked" rule in CLAUDE.md: a Blocked line that only waits for other items unblocks itself at the next build; a question needs a "?" and still waits for the owner
 
 ## 2026-11-20
